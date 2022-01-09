@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UIWidget.h"
 #include "GameFramework/Character.h"
 #include "WallClimbJumpCharacter.generated.h"
 
@@ -30,10 +30,16 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=UI)
+	TSubclassOf<UUIWidget> promptWidgetClass;
+	
+	void ShowPrompt();
+	void HidePrompt();
+
 protected:
 
-	// UPROPERTY(BlueprintReadOnly, Category="Widgets")
-	// UUserWidget* promptWidget;
+	UPROPERTY(BlueprintReadOnly, Category="Widgets")
+	UUIWidget* promptWidget;
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
 
@@ -63,7 +69,7 @@ protected:
 
 	void WallAttach();
 
-	void ShowPrompt();
+	virtual void BeginPlay() override;
 
 protected:
 	// APawn interface

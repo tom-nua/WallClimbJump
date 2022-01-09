@@ -48,6 +48,18 @@ AWallClimbJumpCharacter::AWallClimbJumpCharacter()
 
 }
 
+void AWallClimbJumpCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	if(promptWidgetClass)
+	{
+		UUserWidget* userWidget = CreateWidget(GetWorld()->GetFirstPlayerController(), promptWidgetClass);
+		if(!userWidget){return;}
+		userWidget->AddToViewport(0);
+		promptWidget = Cast<UUIWidget>(userWidget);		
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -86,7 +98,22 @@ void AWallClimbJumpCharacter::WallAttach()
 
 void AWallClimbJumpCharacter::ShowPrompt()
 {
-	
+	UE_LOG(LogTemp, Warning, TEXT("Attemtping to ShowPrompt"))
+	if(!promptWidget)
+	{
+		return;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Firing BP event"))
+	promptWidget->ShowPrompt();
+}
+
+void AWallClimbJumpCharacter::HidePrompt()
+{
+	if(!promptWidget)
+	{
+		return;
+	}
+	promptWidget->HidePrompt();
 }
 
 void AWallClimbJumpCharacter::OnResetVR()

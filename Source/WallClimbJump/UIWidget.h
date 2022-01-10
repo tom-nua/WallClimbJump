@@ -17,8 +17,8 @@ class WALLCLIMBJUMP_API UUIWidget : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 	UFUNCTION(BlueprintNativeEvent)
-	void ShowPrompt();
-	void ShowPrompt_Implementation();
+	void ShowPrompt(const FText &labelText);
+	void ShowPrompt_Implementation(const FText &labelText);
 	UFUNCTION(BlueprintNativeEvent)
 	void HidePrompt();
 	void HidePrompt_Implementation();

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+// #include "ClimbableWall.h"
 #include "UIWidget.h"
 #include "GameFramework/Character.h"
 #include "WallClimbJumpCharacter.generated.h"
@@ -33,13 +34,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=UI)
 	TSubclassOf<UUIWidget> promptWidgetClass;
 	
-	void ShowPrompt();
+	void ShowPrompt(class AClimbableWall* newWall);
 	void HidePrompt();
+	void Detach();
 
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category="Widgets")
 	UUIWidget* promptWidget;
+
+	UPROPERTY(BlueprintReadOnly, Category="Movement")
+	AClimbableWall* selectedWall;
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
 

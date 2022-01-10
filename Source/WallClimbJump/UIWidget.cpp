@@ -9,7 +9,7 @@ void UUIWidget::NativeConstruct()
 	UE_LOG(LogTemp, Warning, TEXT("Running widget"))
 }
 
-void UUIWidget::ShowPrompt_Implementation()
+void UUIWidget::ShowPrompt_Implementation(const FText &labelText)
 {
 	
 }

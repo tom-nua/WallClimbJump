@@ -32,7 +32,7 @@ void AClimbableWall::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComp
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Firing character ShowPrompt"))
-	character->ShowPrompt();
+	character->ShowPrompt(this);
 
 }
 

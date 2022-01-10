@@ -91,24 +91,44 @@ void AWallClimbJumpCharacter::SetupPlayerInputComponent(class UInputComponent* P
 	PlayerInputComponent->BindAction("Climb", IE_Pressed, this, &AWallClimbJumpCharacter::WallAttach);
 }
 
-void AWallClimbJumpCharacter::WallAttach()
+void AWallClimbJumpCharacter::Detach()
 {
-	
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 }
 
-void AWallClimbJumpCharacter::ShowPrompt()
+void AWallClimbJumpCharacter::WallAttach()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Attemtping to ShowPrompt"))
+	if(GetCharacterMovement()->MovementMode == MOVE_Flying)
+	{
+		Detach();
+	}
+	else if(selectedWall)
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		GetCharacterMovement()->StopMovementImmediately();
+		promptWidget->ShowPrompt(FText::FromString("E - Detach"));
+	}
+}
+
+void AWallClimbJumpCharacter::ShowPrompt(AClimbableWall* newWall)
+{
+	selectedWall = newWall;
+	UE_LOG(LogTemp, Warning, TEXT("Attempting to ShowPrompt"))
 	if(!promptWidget)
 	{
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Firing BP event"))
-	promptWidget->ShowPrompt();
+	promptWidget->ShowPrompt(FText::FromString("E - Climb"));
 }
 
 void AWallClimbJumpCharacter::HidePrompt()
 {
+	selectedWall = nullptr;
+	if(GetCharacterMovement()->MovementMode == MOVE_Flying)
+	{
+		Detach();
+	}
 	if(!promptWidget)
 	{
 		return;

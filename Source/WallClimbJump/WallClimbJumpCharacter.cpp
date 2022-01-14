@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "WallClimbJumpCharacter.h"
+
+#include "CharAnimInstance.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -58,6 +60,11 @@ void AWallClimbJumpCharacter::BeginPlay()
 		userWidget->AddToViewport(0);
 		promptWidget = Cast<UUIWidget>(userWidget);		
 	}
+	UAnimInstance* animInstance = GetMesh()->GetAnimInstance();
+	if(animInstance)
+	{
+		animController = Cast<UCharAnimInstance>(animInstance);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -93,6 +100,10 @@ void AWallClimbJumpCharacter::SetupPlayerInputComponent(class UInputComponent* P
 
 void AWallClimbJumpCharacter::Detach()
 {
+	if(animController)
+	{
+		animController->isClimbing = false;
+	}
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 }
 
@@ -100,12 +111,18 @@ void AWallClimbJumpCharacter::WallAttach()
 {
 	if(GetCharacterMovement()->MovementMode == MOVE_Flying)
 	{
+		promptWidget->ShowPrompt(FText::FromString("E - Attach"));
 		Detach();
 	}
 	else if(selectedWall)
 	{
+		if(animController)
+		{
+			animController->isClimbing = true;
+		}
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		GetCharacterMovement()->StopMovementImmediately();
+		
 		promptWidget->ShowPrompt(FText::FromString("E - Detach"));
 	}
 }
@@ -113,12 +130,12 @@ void AWallClimbJumpCharacter::WallAttach()
 void AWallClimbJumpCharacter::ShowPrompt(AClimbableWall* newWall)
 {
 	selectedWall = newWall;
-	UE_LOG(LogTemp, Warning, TEXT("Attempting to ShowPrompt"))
+	// UE_LOG(LogTemp, Warning, TEXT("Attempting to ShowPrompt"))
 	if(!promptWidget)
 	{
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Firing BP event"))
+	// UE_LOG(LogTemp, Warning, TEXT("Firing BP event"))
 	promptWidget->ShowPrompt(FText::FromString("E - Climb"));
 }
 

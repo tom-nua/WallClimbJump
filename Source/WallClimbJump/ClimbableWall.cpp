@@ -28,10 +28,10 @@ void AClimbableWall::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComp
 	AWallClimbJumpCharacter* character = Cast<AWallClimbJumpCharacter>(OtherActor);
 	if (!character)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Not character"))
+		// UE_LOG(LogTemp, Warning, TEXT("Not character"))
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Firing character ShowPrompt"))
+	// UE_LOG(LogTemp, Warning, TEXT("Firing character ShowPrompt"))
 	character->ShowPrompt(this);
 
 }

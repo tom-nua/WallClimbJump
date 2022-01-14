@@ -20,6 +20,9 @@ class AWallClimbJumpCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	UPROPERTY()
+	class UCharAnimInstance* animController;
 public:
 	AWallClimbJumpCharacter();
 
@@ -45,6 +48,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
 	AClimbableWall* selectedWall;
+	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
 

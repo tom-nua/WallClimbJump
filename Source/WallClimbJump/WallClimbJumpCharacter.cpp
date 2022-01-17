@@ -16,6 +16,8 @@
 
 AWallClimbJumpCharacter::AWallClimbJumpCharacter()
 {
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -65,6 +67,11 @@ void AWallClimbJumpCharacter::BeginPlay()
 	{
 		animController = Cast<UCharAnimInstance>(animInstance);
 	}
+}
+
+void AWallClimbJumpCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -124,6 +131,7 @@ void AWallClimbJumpCharacter::WallAttach()
 		GetCharacterMovement()->StopMovementImmediately();
 		
 		promptWidget->ShowPrompt(FText::FromString("E - Detach"));
+		GetMesh()->bPauseAnims = true;
 	}
 }
 

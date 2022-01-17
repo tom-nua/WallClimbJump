@@ -36,6 +36,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=UI)
 	TSubclassOf<UUIWidget> promptWidgetClass;
+
+	// UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Animation)
+	// TSubclassOf<UAnimSequence> climbAnim;
 	
 	void ShowPrompt(class AClimbableWall* newWall);
 	void HidePrompt();
@@ -79,6 +82,8 @@ protected:
 	void WallAttach();
 
 	virtual void BeginPlay() override;
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 
 protected:
 	// APawn interface

@@ -41,7 +41,7 @@ public:
 	// TSubclassOf<UAnimSequence> climbAnim;
 	
 	void ShowPrompt(class AClimbableWall* newWall);
-	void HidePrompt();
+	void HidePrompt(AClimbableWall* wall);
 	void Detach();
 
 protected:
@@ -51,6 +51,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
 	AClimbableWall* selectedWall;
+
+	bool bIsClimbing;
+	bool bIsHoldingLedge;
 	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();

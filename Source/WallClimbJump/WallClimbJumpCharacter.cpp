@@ -3,6 +3,7 @@
 #include "WallClimbJumpCharacter.h"
 
 #include "CharAnimInstance.h"
+#include "ClimbableWall.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -35,6 +36,7 @@ AWallClimbJumpCharacter::AWallClimbJumpCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
+	GetCharacterMovement()->MaxFlySpeed = 100;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -112,11 +114,12 @@ void AWallClimbJumpCharacter::Detach()
 		animController->isClimbing = false;
 	}
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	bIsClimbing = false;
 }
 
 void AWallClimbJumpCharacter::WallAttach()
 {
-	if(GetCharacterMovement()->MovementMode == MOVE_Flying)
+	if(bIsClimbing)
 	{
 		promptWidget->ShowPrompt(FText::FromString("E - Attach"));
 		Detach();
@@ -127,11 +130,11 @@ void AWallClimbJumpCharacter::WallAttach()
 		{
 			animController->isClimbing = true;
 		}
+		bIsClimbing = true;
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		GetCharacterMovement()->StopMovementImmediately();
 		
 		promptWidget->ShowPrompt(FText::FromString("E - Detach"));
-		GetMesh()->bPauseAnims = true;
 	}
 }
 
@@ -139,7 +142,7 @@ void AWallClimbJumpCharacter::ShowPrompt(AClimbableWall* newWall)
 {
 	selectedWall = newWall;
 	// UE_LOG(LogTemp, Warning, TEXT("Attempting to ShowPrompt"))
-	if(!promptWidget)
+	if(!promptWidget || bIsClimbing)
 	{
 		return;
 	}
@@ -147,10 +150,14 @@ void AWallClimbJumpCharacter::ShowPrompt(AClimbableWall* newWall)
 	promptWidget->ShowPrompt(FText::FromString("E - Climb"));
 }
 
-void AWallClimbJumpCharacter::HidePrompt()
+void AWallClimbJumpCharacter::HidePrompt(AClimbableWall* wall)
 {
+	if (wall != selectedWall)
+	{
+		return;
+	}
 	selectedWall = nullptr;
-	if(GetCharacterMovement()->MovementMode == MOVE_Flying)
+	if(bIsClimbing)
 	{
 		Detach();
 	}
@@ -196,9 +203,17 @@ void AWallClimbJumpCharacter::MoveForward(float Value)
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		// get forward vector
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(Direction, Value);
+		if(bIsClimbing)
+		{
+			SetActorRotation(selectedWall->GetActorRotation(), ETeleportType::None);
+			AddMovementInput(GetActorUpVector(), Value, false);
+		}
+		else
+		{
+			// get forward vector
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			AddMovementInput(Direction, Value);
+		}
 	}
 }
 
@@ -209,10 +224,17 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
-		// get right vector 
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		// add movement in that direction
-		AddMovementInput(Direction, Value);
+		if(bIsClimbing)
+		{
+			SetActorRotation(selectedWall->GetActorRotation(), ETeleportType::None);
+			AddMovementInput(GetActorRightVector(), Value, false);
+		}
+		else
+		{
+			// get right vector 
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			// add movement in that direction
+			AddMovementInput(Direction, Value);
+		}
 	}
 }

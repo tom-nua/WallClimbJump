@@ -44,7 +44,7 @@ void AClimbableWall::OnComponentEndOverlap(UPrimitiveComponent* OverlappedCompon
 	{
 		return;
 	}
-	character->HidePrompt();
+	character->HidePrompt(this);
 }
 
 // Called every frame

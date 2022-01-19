@@ -75,16 +75,26 @@ void AWallClimbJumpCharacter::BeginPlay()
 void AWallClimbJumpCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	FCollisionResponseParams outHit;
+	FHitResult outHit;
 	FCollisionQueryParams collisionParams;
 	collisionParams.AddIgnoredActor(this);
 	FVector actorLoc = GetActorLocation();
-	// ActorLineTraceSingle(outHit, actorLoc, actorLoc + GetActorForwardVector() * 100, ECC_WorldStatic, collisionParams);
 	DrawDebugLine(GetWorld(), actorLoc, actorLoc + GetActorForwardVector() * 100, FColor::Green, false, 1, 0, 5);
-	if(GetWorld()->LineTraceTestByChannel(actorLoc, actorLoc + GetActorForwardVector() * 100, ECC_WorldStatic, collisionParams, outHit))
+	if(GetWorld()->LineTraceSingleByChannel(outHit, actorLoc, actorLoc + GetActorForwardVector() * 100, ECC_WorldStatic, collisionParams))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Hit"))
+		AClimbableWall* HitWall = Cast<AClimbableWall>(outHit.Actor);
+		if(HitWall == selectedWall)
+		{
+			return;
+		}
+		if(HitWall)
+		{
+			ShowPrompt(HitWall);
+			UE_LOG(LogTemp, Warning, TEXT("Hit"))
+			return;
+		}
 	}
+	HidePrompt();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -161,9 +171,13 @@ void AWallClimbJumpCharacter::ShowPrompt(AClimbableWall* newWall)
 	promptWidget->ShowPrompt(FText::FromString("E - Climb"));
 }
 
-void AWallClimbJumpCharacter::HidePrompt(AClimbableWall* wall)
+void AWallClimbJumpCharacter::HidePrompt()
 {
-	if (wall != selectedWall)
+	// if (wall != selectedWall)
+        	// {
+        	// 	return;
+        	// }
+	if(!selectedWall)
 	{
 		return;
 	}
@@ -176,6 +190,7 @@ void AWallClimbJumpCharacter::HidePrompt(AClimbableWall* wall)
 	{
 		return;
 	}
+	// UE_LOG(LogTemp, Warning, TEXT("Hiding ui"))
 	promptWidget->HidePrompt();
 }
 

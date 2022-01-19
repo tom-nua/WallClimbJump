@@ -10,47 +10,47 @@
 AClimbableWall::AClimbableWall()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	interactOverlap = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
 	SetRootComponent(interactOverlap);
 }
 
 // Called when the game starts or when spawned
-void AClimbableWall::BeginPlay()
-{
-	Super::BeginPlay();
-	interactOverlap->OnComponentBeginOverlap.AddDynamic(this, &AClimbableWall::OnComponentBeginOverlap);
-	interactOverlap->OnComponentEndOverlap.AddDynamic(this, &AClimbableWall::OnComponentEndOverlap);
-}
+// void AClimbableWall::BeginPlay()
+// {
+	// Super::BeginPlay();
+	// interactOverlap->OnComponentBeginOverlap.AddDynamic(this, &AClimbableWall::OnComponentBeginOverlap);
+	// interactOverlap->OnComponentEndOverlap.AddDynamic(this, &AClimbableWall::OnComponentEndOverlap);
+// }
 
-void AClimbableWall::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
-{
-	AWallClimbJumpCharacter* character = Cast<AWallClimbJumpCharacter>(OtherActor);
-	if (!character)
-	{
+// void AClimbableWall::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+// {
+	// AWallClimbJumpCharacter* character = Cast<AWallClimbJumpCharacter>(OtherActor);
+	// if (!character)
+	// {
 		// UE_LOG(LogTemp, Warning, TEXT("Not character"))
-		return;
-	}
+		// return;
+	// }
 	// UE_LOG(LogTemp, Warning, TEXT("Firing character ShowPrompt"))
-	character->ShowPrompt(this);
+	// character->ShowPrompt(this);
 
-}
+// }
 
-void AClimbableWall::OnComponentEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	AWallClimbJumpCharacter* character = Cast<AWallClimbJumpCharacter>(OtherActor);
-	if (!character)
-	{
-		return;
-	}
-	character->HidePrompt(this);
-}
+// void AClimbableWall::OnComponentEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	// UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+// {
+	// AWallClimbJumpCharacter* character = Cast<AWallClimbJumpCharacter>(OtherActor);
+	// if (!character)
+	// {
+	// 	return;
+	// }
+	// character->HidePrompt(this);
+// }
 
 // Called every frame
-void AClimbableWall::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
+// void AClimbableWall::Tick(float DeltaTime)
+// {
+// 	Super::Tick(DeltaTime);
+//
+// }
 

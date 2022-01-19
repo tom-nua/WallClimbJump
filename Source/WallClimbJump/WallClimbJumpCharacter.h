@@ -41,7 +41,7 @@ public:
 	// TSubclassOf<UAnimSequence> climbAnim;
 	
 	void ShowPrompt(class AClimbableWall* newWall);
-	void HidePrompt(AClimbableWall* wall);
+	void HidePrompt();
 	void Detach();
 
 protected:

@@ -4,6 +4,7 @@
 
 #include "CharAnimInstance.h"
 #include "ClimbableWall.h"
+#include "DrawDebugHelpers.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -74,6 +75,16 @@ void AWallClimbJumpCharacter::BeginPlay()
 void AWallClimbJumpCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	FCollisionResponseParams outHit;
+	FCollisionQueryParams collisionParams;
+	collisionParams.AddIgnoredActor(this);
+	FVector actorLoc = GetActorLocation();
+	// ActorLineTraceSingle(outHit, actorLoc, actorLoc + GetActorForwardVector() * 100, ECC_WorldStatic, collisionParams);
+	DrawDebugLine(GetWorld(), actorLoc, actorLoc + GetActorForwardVector() * 100, FColor::Green, false, 1, 0, 5);
+	if(GetWorld()->LineTraceTestByChannel(actorLoc, actorLoc + GetActorForwardVector() * 100, ECC_WorldStatic, collisionParams, outHit))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Hit"))
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

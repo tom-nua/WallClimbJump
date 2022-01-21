@@ -38,6 +38,7 @@ AWallClimbJumpCharacter::AWallClimbJumpCharacter()
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 	GetCharacterMovement()->MaxFlySpeed = 100;
+	GetCharacterMovement()->BrakingDecelerationFlying = 80;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));

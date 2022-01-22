@@ -80,8 +80,11 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	FCollisionQueryParams collisionParams;
 	collisionParams.AddIgnoredActor(this);
 	FVector actorLoc = GetActorLocation();
-	DrawDebugLine(GetWorld(), actorLoc, actorLoc + GetActorForwardVector() * 100, FColor::Green, false, 1, 0, 5);
-	if(GetWorld()->LineTraceSingleByChannel(outHit, actorLoc, actorLoc + GetActorForwardVector() * 100, ECC_WorldStatic, collisionParams))
+	DrawDebugLine(GetWorld(), actorLoc, actorLoc + GetActorForwardVector() * 50, FColor::Green, false, 1, 0, 5);
+	FVector startPos = actorLoc + GetActorForwardVector() * 40;
+	FVector endPos = startPos + GetActorUpVector() * 100;
+	DrawDebugLine(GetWorld(), startPos, endPos, FColor::Red, false, 1, 0, 5);
+	if(GetWorld()->LineTraceSingleByChannel(outHit, actorLoc, actorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, collisionParams))
 	{
 		AClimbableWall* HitWall = Cast<AClimbableWall>(outHit.Actor);
 		if(HitWall == selectedWall)

@@ -52,6 +52,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
 	AClimbableWall* selectedWall;
 
+	UPROPERTY(BlueprintReadOnly, Category="Movement")
+	class ALedge* selectedLedge;
+
 	bool bIsClimbing;
 	bool bIsHoldingLedge;
 	
@@ -85,6 +88,8 @@ protected:
 	void WallAttach();
 
 	virtual void BeginPlay() override;
+	virtual void Jump() override;
+	virtual void StopJumping() override;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

@@ -6,6 +6,7 @@
 #include "ClimbableWall.h"
 #include "DrawDebugHelpers.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Ledge.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -73,10 +74,29 @@ void AWallClimbJumpCharacter::BeginPlay()
 	}
 }
 
+void AWallClimbJumpCharacter::Jump()
+{
+	if(bIsClimbing || bIsHoldingLedge)
+	{
+		return;
+	}
+	Super::Jump();
+}
+
+void AWallClimbJumpCharacter::StopJumping()
+{
+	if(bIsClimbing || bIsHoldingLedge)
+	{
+		return;
+	}
+	Super::StopJumping();
+}
+
 void AWallClimbJumpCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	FHitResult outHit;
+	FHitResult ledgeOutHit;
+	FHitResult wallOutHit;
 	FCollisionQueryParams collisionParams;
 	collisionParams.AddIgnoredActor(this);
 	FVector actorLoc = GetActorLocation();
@@ -84,9 +104,17 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	FVector startPos = actorLoc + GetActorForwardVector() * 40;
 	FVector endPos = startPos + GetActorUpVector() * 100;
 	DrawDebugLine(GetWorld(), startPos, endPos, FColor::Red, false, 1, 0, 5);
-	if(GetWorld()->LineTraceSingleByChannel(outHit, actorLoc, actorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, collisionParams))
+	if(GetWorld()->LineTraceSingleByChannel(ledgeOutHit, startPos, endPos, ECC_WorldStatic, collisionParams))
 	{
-		AClimbableWall* HitWall = Cast<AClimbableWall>(outHit.Actor);
+		ALedge* HitLedge = Cast<ALedge>(ledgeOutHit.Actor);
+		if(HitLedge)
+		{
+			selectedLedge = HitLedge;
+		}
+	}
+	if(GetWorld()->LineTraceSingleByChannel(wallOutHit, actorLoc, actorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, collisionParams))
+	{
+		AClimbableWall* HitWall = Cast<AClimbableWall>(wallOutHit.Actor);
 		if(HitWall == selectedWall)
 		{
 			return;
@@ -108,8 +136,8 @@ void AWallClimbJumpCharacter::SetupPlayerInputComponent(class UInputComponent* P
 {
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AWallClimbJumpCharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AWallClimbJumpCharacter::StopJumping);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AWallClimbJumpCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AWallClimbJumpCharacter::MoveRight);
@@ -227,7 +255,7 @@ void AWallClimbJumpCharacter::LookUpAtRate(float Rate)
 
 void AWallClimbJumpCharacter::MoveForward(float Value)
 {
-	if ((Controller != NULL) && (Value != 0.0f))
+	if (Controller && Value != 0.0f)
 	{
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -249,7 +277,7 @@ void AWallClimbJumpCharacter::MoveForward(float Value)
 
 void AWallClimbJumpCharacter::MoveRight(float Value)
 {
-	if ( (Controller != NULL) && (Value != 0.0f) )
+	if (Controller && Value != 0.0f)
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();

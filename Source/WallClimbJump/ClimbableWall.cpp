@@ -3,8 +3,8 @@
 
 #include "ClimbableWall.h"
 
-#include "WallClimbJumpCharacter.h"
-#include "Components/BoxComponent.h"
+// #include "WallClimbJumpCharacter.h"
+// #include "Components/BoxComponent.h"
 
 // Sets default values
 AClimbableWall::AClimbableWall()

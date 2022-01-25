@@ -7,7 +7,13 @@
 ALedge::ALedge()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
+	UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(RootComponent);
+	if(MeshComponent)
+	{
+		MeshComponent->SetCollisionProfileName("OverlapAll");
+		UE_LOG(LogTemp, Warning, TEXT("Set"));
+	}
 
 }
 

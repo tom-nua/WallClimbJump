@@ -76,11 +76,35 @@ void AWallClimbJumpCharacter::BeginPlay()
 
 void AWallClimbJumpCharacter::Jump()
 {
-	if(bIsClimbing || bIsHoldingLedge)
+	if(selectedLedge)
 	{
+		if(bIsHoldingLedge)
+		{
+			bIsHoldingLedge = false;
+			if(animController)
+			{
+				animController->bIsHolding = false;
+			}
+		}
+		else
+		{
+			bIsHoldingLedge = true;
+			if(animController)
+			{
+				animController->bIsHolding = true;
+			}
+		}
 		return;
 	}
-	Super::Jump();
+	bIsHoldingLedge = false;
+	if(animController)
+	{
+		animController->bIsHolding = false;
+	}
+	if(!bIsClimbing)
+	{
+		Super::Jump();
+	}
 }
 
 void AWallClimbJumpCharacter::StopJumping()
@@ -95,6 +119,19 @@ void AWallClimbJumpCharacter::StopJumping()
 void AWallClimbJumpCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if(bIsClimbing)
+	{
+		if( GetVelocity().IsZero())
+		{
+			GetMesh()->GlobalAnimRateScale = 0.0f;
+		}
+		else
+		{
+			GetMesh()->GlobalAnimRateScale = 1.0f;
+		}
+		// FString v = GetVelocity().ToString();
+		// UE_LOG(LogTemp, Warning, TEXT("%s"), *v)
+	}
 	FHitResult ledgeOutHit;
 	FHitResult wallOutHit;
 	FCollisionQueryParams collisionParams;
@@ -110,7 +147,13 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		if(HitLedge)
 		{
 			selectedLedge = HitLedge;
+		}else
+		{
+			selectedLedge = nullptr;
 		}
+	}else
+	{
+		selectedLedge = nullptr;
 	}
 	if(GetWorld()->LineTraceSingleByChannel(wallOutHit, actorLoc, actorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, collisionParams))
 	{
@@ -164,8 +207,9 @@ void AWallClimbJumpCharacter::Detach()
 {
 	if(animController)
 	{
-		animController->isClimbing = false;
+		animController->bIsClimbing = false;
 	}
+	GetMesh()->GlobalAnimRateScale = 1.0f;
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	bIsClimbing = false;
 }
@@ -181,7 +225,7 @@ void AWallClimbJumpCharacter::WallAttach()
 	{
 		if(animController)
 		{
-			animController->isClimbing = true;
+			animController->bIsClimbing = true;
 		}
 		bIsClimbing = true;
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
@@ -263,6 +307,7 @@ void AWallClimbJumpCharacter::MoveForward(float Value)
 
 		if(bIsClimbing)
 		{
+			GetMesh()->GlobalAnimRateScale = 1.0f;
 			SetActorRotation(selectedWall->GetActorRotation(), ETeleportType::None);
 			AddMovementInput(GetActorUpVector(), Value, false);
 		}

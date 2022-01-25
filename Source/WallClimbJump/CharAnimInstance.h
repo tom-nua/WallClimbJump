@@ -16,6 +16,8 @@ class WALLCLIMBJUMP_API UCharAnimInstance : public UAnimInstance
 
 public:
 	UPROPERTY(BlueprintReadOnly)
-	bool isClimbing;
+	bool bIsClimbing;
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsHolding;
 	
 };

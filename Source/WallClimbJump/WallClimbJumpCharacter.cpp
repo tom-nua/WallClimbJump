@@ -141,7 +141,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	FVector startPos = actorLoc + GetActorForwardVector() * 40;
 	FVector endPos = startPos + GetActorUpVector() * 140;
 	DrawDebugLine(GetWorld(), startPos, endPos, FColor::Red, false, 1, 0, 5);
-	if(GetWorld()->LineTraceSingleByChannel(ledgeOutHit, startPos, endPos, ECC_WorldStatic, collisionParams))
+	if(GetWorld()->LineTraceSingleByChannel(ledgeOutHit, startPos, endPos, ECC_GameTraceChannel1, collisionParams))
 	{
 		ALedge* HitLedge = Cast<ALedge>(ledgeOutHit.Actor);
 		if(HitLedge)

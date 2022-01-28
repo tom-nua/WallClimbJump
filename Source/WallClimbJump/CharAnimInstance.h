@@ -18,6 +18,8 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsClimbing;
 	UPROPERTY(BlueprintReadOnly)
+	float Direction;
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsHolding;
 	
 };

@@ -139,7 +139,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	FVector actorLoc = GetActorLocation();
 	DrawDebugLine(GetWorld(), actorLoc, actorLoc + GetActorForwardVector() * 50, FColor::Green, false, 1, 0, 5);
 	FVector startPos = actorLoc + GetActorForwardVector() * 40;
-	FVector endPos = startPos + GetActorUpVector() * 100;
+	FVector endPos = startPos + GetActorUpVector() * 140;
 	DrawDebugLine(GetWorld(), startPos, endPos, FColor::Red, false, 1, 0, 5);
 	if(GetWorld()->LineTraceSingleByChannel(ledgeOutHit, startPos, endPos, ECC_WorldStatic, collisionParams))
 	{
@@ -311,6 +311,13 @@ void AWallClimbJumpCharacter::MoveForward(float Value)
 			SetActorRotation(selectedWall->GetActorRotation(), ETeleportType::None);
 			AddMovementInput(GetActorUpVector(), Value, false);
 		}
+		else if(bIsHoldingLedge)
+		{
+			if(animController)
+			{
+				animController->Direction = Value;
+			}
+		}
 		else
 		{
 			// get forward vector
@@ -331,6 +338,13 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 		{
 			SetActorRotation(selectedWall->GetActorRotation(), ETeleportType::None);
 			AddMovementInput(GetActorRightVector(), Value, false);
+		}
+		else if(bIsHoldingLedge)
+		{
+			if(animController)
+			{
+				animController->Direction = Value;
+			}
 		}
 		else
 		{

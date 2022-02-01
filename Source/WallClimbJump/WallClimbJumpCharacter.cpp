@@ -81,6 +81,8 @@ void AWallClimbJumpCharacter::Jump()
 		if(bIsHoldingLedge)
 		{
 			bIsHoldingLedge = false;
+			bIsRotating = false;
+			currentLedge = nullptr;
 			if(animController)
 			{
 				animController->bIsHolding = false;
@@ -89,6 +91,7 @@ void AWallClimbJumpCharacter::Jump()
 		else
 		{
 			bIsHoldingLedge = true;
+			currentLedge = selectedLedge;
 			if(animController)
 			{
 				animController->bIsHolding = true;
@@ -98,7 +101,9 @@ void AWallClimbJumpCharacter::Jump()
 		}
 		return;
 	}
+	currentLedge = nullptr;
 	bIsHoldingLedge = false;
+	bIsRotating = false;
 	if(animController)
 	{
 		animController->bIsHolding = false;
@@ -123,7 +128,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if(bIsClimbing)
 	{
-		if( GetVelocity().IsZero())
+		if(GetVelocity().IsZero())
 		{
 			GetMesh()->GlobalAnimRateScale = 0.0f;
 		}
@@ -134,20 +139,26 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		// FString v = GetVelocity().ToString();
 		// UE_LOG(LogTemp, Warning, TEXT("%s"), *v)
 	}
-	if(selectedLedge && bIsRotating)
+	if(currentLedge && bIsRotating && bIsHoldingLedge)
 	{
-		const float ForwardDotProduct = FVector::DotProduct(GetActorForwardVector(), selectedLedge->GetActorRightVector());
-		const float RightDotProduct = FVector::DotProduct(GetActorRightVector(), selectedLedge->GetActorForwardVector());
-		UE_LOG(LogTemp, Warning, TEXT("Forward:%f, Right:%f"), ForwardDotProduct, RightDotProduct);
-		if(ForwardDotProduct == 1)
+		// const float ForwardDotProduct = FVector::DotProduct(GetActorForwardVector(), selectedLedge->GetActorRightVector());
+		// const float RightDotProduct = FVector::DotProduct(GetActorRightVector(), selectedLedge->GetActorForwardVector());
+		const float ForwardDotProduct = FVector::DotProduct(currentLedge->GetActorForwardVector(), GetActorForwardVector());
+		// const float RightDotProduct = FVector::DotProduct(currentLedge->GetActorRightVector(), GetActorRightVector());
+		UE_LOG(LogTemp, Warning, TEXT("Forward:%f"), ForwardDotProduct);
+		if(ForwardDotProduct == 0 || ForwardDotProduct < -0.004000 || ForwardDotProduct > 0.004000)
 		{
 			bIsRotating = false;
 			return;
 		}
-		if(RightDotProduct < 0)
+		if(ForwardDotProduct < 0)
 		{
 			FRotator currentRot = GetActorRotation();
-			SetActorRotation(currentRot.Add(0, 0, -10));
+			SetActorRotation(currentRot.Add(0, -1, 0));
+		}else if(ForwardDotProduct > 0)
+		{
+			FRotator currentRot = GetActorRotation();
+			SetActorRotation(currentRot.Add(0, 1, 0));
 		}
 		// FMath::RInterpTo(GetActorRotation(), RotateTarget, DeltaTime, 1);
 	}
@@ -156,10 +167,10 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	FCollisionQueryParams collisionParams;
 	collisionParams.AddIgnoredActor(this);
 	FVector actorLoc = GetActorLocation();
-	DrawDebugLine(GetWorld(), actorLoc, actorLoc + GetActorForwardVector() * 50, FColor::Green, false, 1, 0, 5);
+	DrawDebugLine(GetWorld(), actorLoc, actorLoc + GetActorForwardVector() * 50, FColor::Green, false, 0.5, 0, 3);
 	FVector startPos = actorLoc + GetActorForwardVector() * 40;
 	FVector endPos = startPos + GetActorUpVector() * 140;
-	DrawDebugLine(GetWorld(), startPos, endPos, FColor::Red, false, 1, 0, 5);
+	DrawDebugLine(GetWorld(), startPos, endPos, FColor::Red, false, 0.5, 0, 3);
 	if(GetWorld()->LineTraceSingleByChannel(ledgeOutHit, startPos, endPos, ECC_GameTraceChannel1, collisionParams))
 	{
 		ALedge* HitLedge = Cast<ALedge>(ledgeOutHit.Actor);

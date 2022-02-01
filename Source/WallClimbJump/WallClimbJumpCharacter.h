@@ -57,6 +57,8 @@ protected:
 
 	bool bIsClimbing;
 	bool bIsHoldingLedge;
+	bool bIsRotating;
+	FRotator RotateTarget;
 	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();

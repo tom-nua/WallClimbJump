@@ -12,17 +12,17 @@ ALedge::ALedge()
 }
 
 // Called when the game starts or when spawned
-void ALedge::BeginPlay()
-{
-	Super::BeginPlay();
-	UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(GetRootComponent());
-	UE_LOG(LogTemp, Warning, TEXT("Going to set"));
-	if(MeshComponent)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Set"));
+// void ALedge::BeginPlay()
+// {
+	// Super::BeginPlay();
+	// UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(GetRootComponent());
+	// UE_LOG(LogTemp, Warning, TEXT("Going to set"));
+	// if(MeshComponent)
+	// {
+		// UE_LOG(LogTemp, Warning, TEXT("Set"));
 		// MeshComponent->SetCollisionProfileName("OverlapAll");
-	}
-}
+	// }
+// }
 
 // Called every frame
 void ALedge::Tick(float DeltaTime)

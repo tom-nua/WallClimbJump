@@ -92,7 +92,9 @@ void AWallClimbJumpCharacter::Jump()
 			if(animController)
 			{
 				animController->bIsHolding = true;
+				bIsRotating = true;
 			}
+			
 		}
 		return;
 	}
@@ -132,6 +134,23 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		// FString v = GetVelocity().ToString();
 		// UE_LOG(LogTemp, Warning, TEXT("%s"), *v)
 	}
+	if(selectedLedge && bIsRotating)
+	{
+		const float ForwardDotProduct = FVector::DotProduct(GetActorForwardVector(), selectedLedge->GetActorRightVector());
+		const float RightDotProduct = FVector::DotProduct(GetActorRightVector(), selectedLedge->GetActorForwardVector());
+		UE_LOG(LogTemp, Warning, TEXT("Forward:%f, Right:%f"), ForwardDotProduct, RightDotProduct);
+		if(ForwardDotProduct == 1)
+		{
+			bIsRotating = false;
+			return;
+		}
+		if(RightDotProduct < 0)
+		{
+			FRotator currentRot = GetActorRotation();
+			SetActorRotation(currentRot.Add(0, 0, -10));
+		}
+		// FMath::RInterpTo(GetActorRotation(), RotateTarget, DeltaTime, 1);
+	}
 	FHitResult ledgeOutHit;
 	FHitResult wallOutHit;
 	FCollisionQueryParams collisionParams;
@@ -165,7 +184,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		if(HitWall)
 		{
 			ShowPrompt(HitWall);
-			UE_LOG(LogTemp, Warning, TEXT("Hit"))
+			// UE_LOG(LogTemp, Warning, TEXT("Hit"))
 			return;
 		}
 	}

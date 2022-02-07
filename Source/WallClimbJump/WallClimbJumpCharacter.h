@@ -56,7 +56,9 @@ protected:
 	class ALedge* selectedLedge;
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
-	class ALedge* currentLedge;
+	ALedge* currentLedge;
+	UPROPERTY(BlueprintReadOnly, Category="Movement")
+	ALedge* rightLedge;
 
 	bool bIsClimbing;
 	bool bIsHoldingLedge;

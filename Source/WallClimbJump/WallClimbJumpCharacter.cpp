@@ -93,6 +93,7 @@ void AWallClimbJumpCharacter::Jump()
 				{
 					animController->bIsHolding = false;
 				}
+			GetCharacterMovement()->bOrientRotationToMovement = true;
 			// }
 		}
 		else
@@ -104,6 +105,7 @@ void AWallClimbJumpCharacter::Jump()
 				animController->bIsHolding = true;
 				bIsRotating = true;
 			}
+			GetCharacterMovement()->bOrientRotationToMovement = false;
 			
 		}
 		return;
@@ -153,17 +155,23 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		const float ForwardDotProduct = FVector::DotProduct(currentLedge->GetActorForwardVector(), GetActorForwardVector());
 		// const float RightDotProduct = FVector::DotProduct(currentLedge->GetActorRightVector(), GetActorRightVector());
 		UE_LOG(LogTemp, Warning, TEXT("Forward:%f"), ForwardDotProduct);
-		if(ForwardDotProduct == 0 || ForwardDotProduct < -0.004000 || ForwardDotProduct > 0.004000)
-		{
-			bIsRotating = false;
-			return;
-		}
 		if(ForwardDotProduct < 0)
 		{
+			if(ForwardDotProduct > -0.004000)
+			{
+				bIsRotating = false;
+				return;
+			}
 			FRotator currentRot = GetActorRotation();
 			SetActorRotation(currentRot.Add(0, -1, 0));
+			UE_LOG(LogTemp, Warning, TEXT("Something"));
 		}else if(ForwardDotProduct > 0)
 		{
+			if(ForwardDotProduct < 0.004000)
+			{
+				bIsRotating = false;
+				return;
+			}
 			FRotator currentRot = GetActorRotation();
 			SetActorRotation(currentRot.Add(0, 1, 0));
 		}
@@ -252,6 +260,7 @@ void AWallClimbJumpCharacter::Detach()
 	GetMesh()->GlobalAnimRateScale = 1.0f;
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	bIsClimbing = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
 void AWallClimbJumpCharacter::WallAttach()
@@ -268,6 +277,7 @@ void AWallClimbJumpCharacter::WallAttach()
 			animController->bIsClimbing = true;
 		}
 		bIsClimbing = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		GetCharacterMovement()->StopMovementImmediately();
 		
@@ -377,7 +387,7 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 		{
 			if(animController)
 			{
-				SetActorRotation(currentLedge->GetActorRotation(), ETeleportType::None);
+				// SetActorRotation(currentLedge->GetActorRotation(), ETeleportType::None);
 				animController->Direction = Value;
 				AddMovementInput(GetActorRightVector(), Value, false);
 			}

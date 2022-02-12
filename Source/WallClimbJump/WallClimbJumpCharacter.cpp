@@ -76,46 +76,36 @@ void AWallClimbJumpCharacter::BeginPlay()
 
 void AWallClimbJumpCharacter::Jump()
 {
-	if(selectedLedge)
+	if(currentLedge)
 	{
-		if(bIsHoldingLedge)
+		// if(!rightLedge)
+		// {
+		// 	GetCharacterMovement()->AddImpulse(GetActorRightVector() * 5);
+		// }
+		// else
+		// {
+		// }
+		bIsHoldingLedge = false;
+		bIsRotating = false;
+		currentLedge = nullptr;
+		if(animController)
 		{
-			// if(!rightLedge)
-			// {
-			// 	GetCharacterMovement()->AddImpulse(GetActorRightVector() * 5);
-			// }
-			// else
-			// {
-				bIsHoldingLedge = false;
-				bIsRotating = false;
-				currentLedge = nullptr;
-				if(animController)
-				{
-					animController->bIsHolding = false;
-				}
-			GetCharacterMovement()->bOrientRotationToMovement = true;
-			// }
+			animController->bIsHolding = false;
 		}
-		else
-		{
-			bIsHoldingLedge = true;
-			currentLedge = selectedLedge;
-			if(animController)
-			{
-				animController->bIsHolding = true;
-				bIsRotating = true;
-			}
-			GetCharacterMovement()->bOrientRotationToMovement = false;
-			
-		}
+		GetCharacterMovement()->bOrientRotationToMovement = true;
 		return;
 	}
-	currentLedge = nullptr;
-	bIsHoldingLedge = false;
-	bIsRotating = false;
-	if(animController)
+	if(selectedLedge)
 	{
-		animController->bIsHolding = false;
+		bIsHoldingLedge = true;
+		bIsRotating = true;
+		currentLedge = selectedLedge;
+		if(animController)
+		{
+			animController->bIsHolding = true;
+		}
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		return;
 	}
 	if(!bIsClimbing)
 	{
@@ -157,17 +147,16 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		UE_LOG(LogTemp, Warning, TEXT("Forward:%f"), ForwardDotProduct);
 		if(ForwardDotProduct < 0)
 		{
-			if(ForwardDotProduct > -0.004000)
+			if(ForwardDotProduct > -0.010000)
 			{
 				bIsRotating = false;
 				return;
 			}
 			FRotator currentRot = GetActorRotation();
 			SetActorRotation(currentRot.Add(0, -1, 0));
-			UE_LOG(LogTemp, Warning, TEXT("Something"));
 		}else if(ForwardDotProduct > 0)
 		{
-			if(ForwardDotProduct < 0.004000)
+			if(ForwardDotProduct < 0.010000)
 			{
 				bIsRotating = false;
 				return;

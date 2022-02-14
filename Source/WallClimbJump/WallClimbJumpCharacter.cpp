@@ -167,7 +167,6 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		// FMath::RInterpTo(GetActorRotation(), RotateTarget, DeltaTime, 1);
 	}
 	FHitResult ledgeOutHit;
-	FHitResult rightOutHit;
 	FHitResult wallOutHit;
 	FCollisionQueryParams collisionParams;
 	collisionParams.AddIgnoredActor(this);
@@ -176,9 +175,6 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	FVector startPos = actorLoc + GetActorForwardVector() * 40;
 	FVector endPos = startPos + GetActorUpVector() * 140;
 	DrawDebugLine(GetWorld(), startPos, endPos, FColor::Red, false, 0.5, 0, 3);
-	FVector rightStartPos = actorLoc + (GetActorRightVector() * 30) + (GetActorUpVector() * 140);
-	FVector rightEndPos = rightStartPos + GetActorForwardVector() * 40;
-	DrawDebugLine(GetWorld(), rightStartPos, rightEndPos, FColor::Blue, false, 0.5, 0, 3);
 	if(GetWorld()->LineTraceSingleByChannel(ledgeOutHit, startPos, endPos, ECC_GameTraceChannel1, collisionParams))
 	{
 		ALedge* HitLedge = Cast<ALedge>(ledgeOutHit.Actor);
@@ -192,31 +188,6 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	}else
 	{
 		selectedLedge = nullptr;
-	}
-	if (currentLedge)
-	{
-		FCollisionQueryParams rightCollisionParams;
-		rightCollisionParams.AddIgnoredActor(this);
-		rightCollisionParams.AddIgnoredActor(currentLedge);
-		if(GetWorld()->LineTraceSingleByChannel(rightOutHit, rightStartPos, rightEndPos, ECC_GameTraceChannel1, rightCollisionParams))
-		{
-			ALedge* HitLedge = Cast<ALedge>(rightOutHit.Actor);
-			if(HitLedge)
-			{
-				rightLedge = HitLedge;
-			}
-			else
-			{
-				rightLedge = nullptr;
-			}
-		}
-		else
-		{
-			rightLedge = nullptr;
-		}
-	}else
-	{
-		rightLedge = nullptr;
 	}
 	if(GetWorld()->LineTraceSingleByChannel(wallOutHit, actorLoc, actorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, collisionParams))
 	{
@@ -391,15 +362,51 @@ void AWallClimbJumpCharacter::MoveForward(float Value)
 
 void AWallClimbJumpCharacter::MoveRight(float Value)
 {
-	if (Controller && Value != 0.0f)
+	if(bIsHoldingLedge)
 	{
-		if(bIsClimbing)
+		if (currentLedge)
 		{
-			SetActorRotation(selectedWall->GetActorRotation(), ETeleportType::None);
-			AddMovementInput(GetActorRightVector(), Value, false);
-		}
-		else if(bIsHoldingLedge)
+			FCollisionQueryParams CollisionParams;
+			CollisionParams.AddIgnoredActor(this);
+			CollisionParams.AddIgnoredActor(currentLedge);
+			FHitResult outHit;
+			FVector rightStartPos = GetActorLocation() + (GetActorRightVector() * 30) + (GetActorUpVector() * 140);
+			FVector rightEndPos = rightStartPos + GetActorForwardVector() * 40;
+			FVector leftStartPos = GetActorLocation() + (GetActorRightVector() * -30) + (GetActorUpVector() * 140);
+			FVector leftEndPos = leftStartPos + GetActorForwardVector() * 40;
+			DrawDebugLine(GetWorld(), rightStartPos, rightEndPos, FColor::Blue, false, 0.5, 0, 3);
+			DrawDebugLine(GetWorld(), leftStartPos, leftEndPos, FColor::Blue, false, 0.5, 0, 3);
+			if(GetWorld()->LineTraceSingleByChannel(outHit, rightStartPos, rightEndPos, ECC_GameTraceChannel1, CollisionParams))
+			{
+				ALedge* HitLedge = Cast<ALedge>(outHit.Actor);
+				if(HitLedge)
+				{
+					rightLedge = HitLedge;
+				}
+				else
+				{
+					rightLedge = nullptr;
+				}
+			}
+			else if(GetWorld()->LineTraceSingleByChannel(outHit, leftStartPos, leftEndPos, ECC_GameTraceChannel1, CollisionParams))
+			{
+				ALedge* HitLedge = Cast<ALedge>(outHit.Actor);
+				if(HitLedge)
+				{
+					rightLedge = HitLedge;
+				}
+				else
+				{
+					rightLedge = nullptr;
+				}
+			}
+			else
+			{
+				rightLedge = nullptr;
+			}
+		}else
 		{
+			rightLedge = nullptr;
 			if(animController)
 			{
 				// SetActorRotation(currentLedge->GetActorRotation(), ETeleportType::None);
@@ -407,15 +414,25 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 				AddMovementInput(GetActorRightVector(), Value, false);
 			}
 		}
-		else
-		{
-			// find out which way is right
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-			// get right vector 
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-			// add movement in that direction
-			AddMovementInput(Direction, Value);
-		}
+		return;
+	}
+	if (!Controller || Value == 0.0f)
+	{
+		return;
+	}
+	if(bIsClimbing)
+	{
+		SetActorRotation(selectedWall->GetActorRotation(), ETeleportType::None);
+		AddMovementInput(GetActorRightVector(), Value, false);
+	}
+	else
+	{
+		// find out which way is right
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		// get right vector 
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		// add movement in that direction
+		AddMovementInput(Direction, Value);
 	}
 }

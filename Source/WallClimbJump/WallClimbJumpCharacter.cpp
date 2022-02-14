@@ -167,6 +167,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		// FMath::RInterpTo(GetActorRotation(), RotateTarget, DeltaTime, 1);
 	}
 	FHitResult ledgeOutHit;
+	FHitResult rightOutHit;
 	FHitResult wallOutHit;
 	FCollisionQueryParams collisionParams;
 	collisionParams.AddIgnoredActor(this);
@@ -191,6 +192,22 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	}else
 	{
 		selectedLedge = nullptr;
+	}
+	if(GetWorld()->LineTraceSingleByChannel(rightOutHit, rightStartPos, rightEndPos, ECC_GameTraceChannel1, collisionParams))
+	{
+		ALedge* HitLedge = Cast<ALedge>(rightOutHit.Actor);
+		if(HitLedge)
+		{
+			rightLedge = HitLedge;
+		}
+		else
+		{
+			rightLedge = nullptr;
+		}
+	}
+	else
+	{
+		rightLedge = nullptr;
 	}
 	if(GetWorld()->LineTraceSingleByChannel(wallOutHit, actorLoc, actorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, collisionParams))
 	{

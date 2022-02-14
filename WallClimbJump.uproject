@@ -13,5 +13,10 @@
 				"UMG"
 			]
 		}
+	],
+	"TargetPlatforms": [
+		"Android",
+		"AllDesktop",
+		"WindowsNoEditor"
 	]
 }

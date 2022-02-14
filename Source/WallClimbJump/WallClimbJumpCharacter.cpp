@@ -78,13 +78,13 @@ void AWallClimbJumpCharacter::Jump()
 {
 	if(currentLedge)
 	{
-		// if(!rightLedge)
-		// {
-		// 	GetCharacterMovement()->AddImpulse(GetActorRightVector() * 5);
-		// }
-		// else
-		// {
-		// }
+		if(rightLedge)
+		{
+			GetCharacterMovement()->AddImpulse(GetActorRightVector() * 1000, true);
+			currentLedge = rightLedge;
+			rightLedge = nullptr;
+			return;
+		}
 		bIsHoldingLedge = false;
 		bIsRotating = false;
 		currentLedge = nullptr;
@@ -193,19 +193,28 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	{
 		selectedLedge = nullptr;
 	}
-	if(GetWorld()->LineTraceSingleByChannel(rightOutHit, rightStartPos, rightEndPos, ECC_GameTraceChannel1, collisionParams))
+	if (currentLedge)
 	{
-		ALedge* HitLedge = Cast<ALedge>(rightOutHit.Actor);
-		if(HitLedge)
+		FCollisionQueryParams rightCollisionParams;
+		rightCollisionParams.AddIgnoredActor(this);
+		rightCollisionParams.AddIgnoredActor(currentLedge);
+		if(GetWorld()->LineTraceSingleByChannel(rightOutHit, rightStartPos, rightEndPos, ECC_GameTraceChannel1, rightCollisionParams))
 		{
-			rightLedge = HitLedge;
+			ALedge* HitLedge = Cast<ALedge>(rightOutHit.Actor);
+			if(HitLedge)
+			{
+				rightLedge = HitLedge;
+			}
+			else
+			{
+				rightLedge = nullptr;
+			}
 		}
 		else
 		{
 			rightLedge = nullptr;
 		}
-	}
-	else
+	}else
 	{
 		rightLedge = nullptr;
 	}

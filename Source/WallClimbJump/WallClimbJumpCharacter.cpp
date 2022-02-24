@@ -38,8 +38,6 @@ AWallClimbJumpCharacter::AWallClimbJumpCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
-	GetCharacterMovement()->MaxFlySpeed = 100;
-	GetCharacterMovement()->BrakingDecelerationFlying = 80;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -79,20 +77,18 @@ void AWallClimbJumpCharacter::Jump()
 	if(currentLedge)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("current ledge"));
-		if(rightLedge)
+		if(!rightLedge)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("right ledge"));
-			GetCharacterMovement()->AddImpulse(GetActorRightVector() * 1000, true);
-			currentLedge = rightLedge;
-			rightLedge = nullptr;
+			GetCharacterMovement()->AddImpulse(GetActorRightVector() * 300, true);
+			currentLedge = nullptr;
 			return;
 		}
-		if(leftLedge)
+		if(!leftLedge)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("left ledge"));
-			GetCharacterMovement()->AddImpulse(GetActorRightVector() * -1000, true);
-			currentLedge = leftLedge;
-			leftLedge = nullptr;
+			GetCharacterMovement()->AddImpulse(GetActorRightVector() * -300, true);
+			currentLedge = nullptr;
 			return;
 		}
 		bIsHoldingLedge = false;
@@ -103,6 +99,7 @@ void AWallClimbJumpCharacter::Jump()
 			animController->bIsHolding = false;
 		}
 		GetCharacterMovement()->bOrientRotationToMovement = true;
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		return;
 	}
 	if(selectedLedge)
@@ -114,7 +111,11 @@ void AWallClimbJumpCharacter::Jump()
 		{
 			animController->bIsHolding = true;
 		}
+		GetCharacterMovement()->MaxFlySpeed = 50;
+		GetCharacterMovement()->BrakingDecelerationFlying = 110;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
+		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		GetCharacterMovement()->StopMovementImmediately();
 		return;
 	}
 	if(!bIsClimbing)
@@ -273,6 +274,8 @@ void AWallClimbJumpCharacter::WallAttach()
 			animController->bIsClimbing = true;
 		}
 		bIsClimbing = true;
+		GetCharacterMovement()->MaxFlySpeed = 100;
+		GetCharacterMovement()->BrakingDecelerationFlying = 80;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		GetCharacterMovement()->StopMovementImmediately();
@@ -376,47 +379,71 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 	{
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(this);
-		CollisionParams.AddIgnoredActor(currentLedge);
-		FHitResult outHit;
+		// CollisionParams.AddIgnoredActor(currentLedge);
+		FHitResult rightOutHit;
+		FHitResult leftOutHit;
 		FVector rightStartPos = GetActorLocation() + (GetActorRightVector() * 30) + (GetActorUpVector() * 140);
 		FVector rightEndPos = rightStartPos + GetActorForwardVector() * 40;
 		FVector leftStartPos = GetActorLocation() + (GetActorRightVector() * -30) + (GetActorUpVector() * 140);
 		FVector leftEndPos = leftStartPos + GetActorForwardVector() * 40;
-		DrawDebugLine(GetWorld(), rightStartPos, rightEndPos, FColor::Blue, false, 0.5, 0, 3);
-		DrawDebugLine(GetWorld(), leftStartPos, leftEndPos, FColor::Blue, false, 0.5, 0, 3);
-		if(Value > 0 && GetWorld()->LineTraceSingleByChannel(outHit, rightStartPos, rightEndPos, ECC_GameTraceChannel1, CollisionParams))
+		DrawDebugLine(GetWorld(), rightStartPos, rightEndPos, FColor::Blue, false, 0.5, 0, 2);
+		DrawDebugLine(GetWorld(), leftStartPos, leftEndPos, FColor::Green, false, 0.5, 0, 2);
+		bool hitRight = GetWorld()->LineTraceSingleByChannel(rightOutHit, rightStartPos, rightEndPos, ECC_GameTraceChannel1, CollisionParams);
+		bool hitLeft = GetWorld()->LineTraceSingleByChannel(leftOutHit, leftStartPos, leftEndPos, ECC_GameTraceChannel1, CollisionParams);
+		if(Value == 0)
 		{
-			ALedge* HitLedge = Cast<ALedge>(outHit.Actor);
-			if(HitLedge)
-			{
-				rightLedge = HitLedge;
-			}
-			else
-			{
-				rightLedge = nullptr;
-			}
-		}
-		else if(Value < 0 && GetWorld()->LineTraceSingleByChannel(outHit, leftStartPos, leftEndPos, ECC_GameTraceChannel1, CollisionParams))
-		{
-			ALedge* HitLedge = Cast<ALedge>(outHit.Actor);
-			if(HitLedge)
-			{
-				leftLedge = HitLedge;
-			}
-			else
-			{
-				leftLedge = nullptr;
-			}
-		}
-		else
-		{
-			rightLedge = nullptr;
-			leftLedge = nullptr;
+			UE_LOG(LogTemp, Warning, TEXT("Moving Nowhere"))
+			rightLedge = true;
+			leftLedge = true;
 			if(animController)
 			{
-				// SetActorRotation(currentLedge->GetActorRotation(), ETeleportType::None);
-				animController->Direction = Value;
-				AddMovementInput(GetActorRightVector(), Value, false);
+				animController->Direction = 0;
+			}
+		}
+		if(Value > 0 && hitRight)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Moving Right"))
+			ALedge* HitLedge = Cast<ALedge>(rightOutHit.Actor);
+			if(HitLedge)
+			{
+				rightLedge = true;
+				if(animController)
+				{
+					animController->Direction = Value;
+					AddMovementInput(GetActorRightVector(), Value, false);
+				}
+			}
+			else
+			{
+				rightLedge = false;
+				if(animController)
+				{
+					animController->Direction = 0;
+				}
+				return;
+			}
+		}
+		if(Value < 0 && hitLeft)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Moving Left"))
+			ALedge* HitLedge = Cast<ALedge>(leftOutHit.Actor);
+			if(HitLedge)
+			{
+				leftLedge = true;
+				if(animController)
+				{
+					animController->Direction = Value;
+					AddMovementInput(GetActorRightVector(), Value, false);
+				}
+			}
+			else
+			{
+				leftLedge = false;
+				if(animController)
+				{
+					animController->Direction = 0;
+				}
+				return;
 			}
 		}
 		return;

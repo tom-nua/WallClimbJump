@@ -58,14 +58,15 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
 	ALedge* currentLedge;
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
-	bool rightLedge;
+	ALedge* rightLedge;
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
-	bool leftLedge;
+	ALedge* leftLedge;
 
 	bool bIsClimbing;
 	bool bIsHoldingLedge;
 	bool bIsRotating;
 	FRotator RotateTarget;
+	float moveDirection;
 	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();

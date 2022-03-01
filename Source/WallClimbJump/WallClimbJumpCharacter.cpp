@@ -77,28 +77,30 @@ void AWallClimbJumpCharacter::Jump()
 	if(currentLedge)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("current ledge"));
-		if(!rightLedge)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("right ledge"));
-			GetCharacterMovement()->AddImpulse(GetActorRightVector() * 300, true);
-			currentLedge = nullptr;
-			return;
-		}
-		if(!leftLedge)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("left ledge"));
-			GetCharacterMovement()->AddImpulse(GetActorRightVector() * -300, true);
-			currentLedge = nullptr;
-			return;
-		}
 		bIsHoldingLedge = false;
 		bIsRotating = false;
 		currentLedge = nullptr;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
 		if(animController)
 		{
 			animController->bIsHolding = false;
 		}
-		GetCharacterMovement()->bOrientRotationToMovement = true;
+		if(!rightLedge && moveDirection > 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("right ledge"));
+			GetCharacterMovement()->AddImpulse(GetActorRightVector() * 1500, true);
+			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+			// currentLedge = nullptr;
+			return;
+		}
+		else if(!leftLedge && moveDirection < 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("left ledge"));
+			GetCharacterMovement()->AddImpulse(GetActorRightVector() * -1500, true);
+			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+			// currentLedge = nullptr;
+			return;
+		}
 		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		return;
 	}
@@ -377,6 +379,7 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 {
 	if(bIsHoldingLedge)
 	{
+		moveDirection = Value;
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(this);
 		// CollisionParams.AddIgnoredActor(currentLedge);
@@ -390,24 +393,24 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 		DrawDebugLine(GetWorld(), leftStartPos, leftEndPos, FColor::Green, false, 0.5, 0, 2);
 		bool hitRight = GetWorld()->LineTraceSingleByChannel(rightOutHit, rightStartPos, rightEndPos, ECC_GameTraceChannel1, CollisionParams);
 		bool hitLeft = GetWorld()->LineTraceSingleByChannel(leftOutHit, leftStartPos, leftEndPos, ECC_GameTraceChannel1, CollisionParams);
-		if(Value == 0)
+		// if(Value == 0)
+		// {
+		// 	UE_LOG(LogTemp, Warning, TEXT("Moving Nowhere"))
+		// 	rightLedge = nullptr;
+		// 	leftLedge = nullptr;
+		// 	if(animController)
+		// 	{
+		// 		animController->Direction = 0;
+		// 	}
+		// }
+		if(hitRight)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Moving Nowhere"))
-			rightLedge = true;
-			leftLedge = true;
-			if(animController)
-			{
-				animController->Direction = 0;
-			}
-		}
-		if(Value > 0 && hitRight)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Moving Right"))
+			// UE_LOG(LogTemp, Warning, TEXT("Moving Right"))
 			ALedge* HitLedge = Cast<ALedge>(rightOutHit.Actor);
 			if(HitLedge)
 			{
-				rightLedge = true;
-				if(animController)
+				rightLedge = HitLedge;
+				if(animController && Value > 0)
 				{
 					animController->Direction = Value;
 					AddMovementInput(GetActorRightVector(), Value, false);
@@ -415,22 +418,25 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 			}
 			else
 			{
-				rightLedge = false;
+				rightLedge = nullptr;
 				if(animController)
 				{
 					animController->Direction = 0;
 				}
-				return;
 			}
 		}
-		if(Value < 0 && hitLeft)
+		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Moving Left"))
+			rightLedge = nullptr;
+		}
+		if(hitLeft)
+		{
+			// UE_LOG(LogTemp, Warning, TEXT("Moving Left"))
 			ALedge* HitLedge = Cast<ALedge>(leftOutHit.Actor);
 			if(HitLedge)
 			{
-				leftLedge = true;
-				if(animController)
+				leftLedge = HitLedge;
+				if(animController && Value < 0)
 				{
 					animController->Direction = Value;
 					AddMovementInput(GetActorRightVector(), Value, false);
@@ -438,13 +444,16 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 			}
 			else
 			{
-				leftLedge = false;
+				leftLedge = nullptr;
 				if(animController)
 				{
 					animController->Direction = 0;
 				}
-				return;
 			}
+		}
+		else
+		{
+			leftLedge = nullptr;
 		}
 		return;
 	}

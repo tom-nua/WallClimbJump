@@ -72,69 +72,6 @@ void AWallClimbJumpCharacter::BeginPlay()
 	}
 }
 
-void AWallClimbJumpCharacter::Jump()
-{
-	if(currentLedge)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("current ledge"));
-		bIsHoldingLedge = false;
-		bIsRotating = false;
-		currentLedge = nullptr;
-		GetCharacterMovement()->bOrientRotationToMovement = true;
-		if(animController)
-		{
-			animController->bIsHolding = false;
-		}
-		if(!rightLedge && moveDirection > 0)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("right ledge"));
-			GetCharacterMovement()->AddImpulse(GetActorRightVector() * 1500, true);
-			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-			// currentLedge = nullptr;
-			return;
-		}
-		else if(!leftLedge && moveDirection < 0)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("left ledge"));
-			GetCharacterMovement()->AddImpulse(GetActorRightVector() * -1500, true);
-			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-			// currentLedge = nullptr;
-			return;
-		}
-		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		return;
-	}
-	if(selectedLedge)
-	{
-		bIsHoldingLedge = true;
-		bIsRotating = true;
-		currentLedge = selectedLedge;
-		if(animController)
-		{
-			animController->bIsHolding = true;
-		}
-		GetCharacterMovement()->MaxFlySpeed = 50;
-		GetCharacterMovement()->BrakingDecelerationFlying = 110;
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-		GetCharacterMovement()->StopMovementImmediately();
-		return;
-	}
-	if(!bIsClimbing)
-	{
-		Super::Jump();
-	}
-}
-
-void AWallClimbJumpCharacter::StopJumping()
-{
-	if(bIsClimbing || bIsHoldingLedge)
-	{
-		return;
-	}
-	Super::StopJumping();
-}
-
 void AWallClimbJumpCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -375,6 +312,72 @@ void AWallClimbJumpCharacter::MoveForward(float Value)
 	}
 }
 
+void AWallClimbJumpCharacter::Jump()
+{
+	if(currentLedge)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("current ledge"));
+		bIsHoldingLedge = false;
+		bIsRotating = false;
+		currentLedge = nullptr;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		if(animController)
+		{
+			animController->bIsHolding = false;
+		}
+		if(!rightLedge && moveDirection > 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("right ledge"));
+			GetCharacterMovement()->AddImpulse(GetActorRightVector() * 970, true);
+			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+			// currentLedge = nullptr;
+			return;
+		}
+		else if(!leftLedge && moveDirection < 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("left ledge"));
+			GetCharacterMovement()->AddImpulse(GetActorRightVector() * -970, true);
+			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+			// currentLedge = nullptr;
+			return;
+		}
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		return;
+	}
+	if(selectedLedge)
+	{
+		bIsHoldingLedge = true;
+		bIsRotating = true;
+		currentLedge = selectedLedge;
+		if(animController)
+		{
+			animController->bIsHolding = true;
+		}
+		FVector hangLocation = GetMesh()->GetSocketLocation("hand_Socket");
+		hangLocation.Z -= GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
+		SetActorLocation(hangLocation);
+		GetCharacterMovement()->MaxFlySpeed = 50;
+		GetCharacterMovement()->BrakingDecelerationFlying = 110;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		GetCharacterMovement()->StopMovementImmediately();
+		return;
+	}
+	if(!bIsClimbing)
+	{
+		Super::Jump();
+	}
+}
+
+void AWallClimbJumpCharacter::StopJumping()
+{
+	if(bIsClimbing || bIsHoldingLedge)
+	{
+		return;
+	}
+	Super::StopJumping();
+}
+
 void AWallClimbJumpCharacter::MoveRight(float Value)
 {
 	if(bIsHoldingLedge)
@@ -385,9 +388,9 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 		// CollisionParams.AddIgnoredActor(currentLedge);
 		FHitResult rightOutHit;
 		FHitResult leftOutHit;
-		FVector rightStartPos = GetActorLocation() + (GetActorRightVector() * 30) + (GetActorUpVector() * 140);
+		FVector rightStartPos = GetActorLocation() + (GetActorRightVector() * 30) + (GetActorUpVector() * 120);
 		FVector rightEndPos = rightStartPos + GetActorForwardVector() * 40;
-		FVector leftStartPos = GetActorLocation() + (GetActorRightVector() * -30) + (GetActorUpVector() * 140);
+		FVector leftStartPos = GetActorLocation() + (GetActorRightVector() * -30) + (GetActorUpVector() * 120);
 		FVector leftEndPos = leftStartPos + GetActorForwardVector() * 40;
 		DrawDebugLine(GetWorld(), rightStartPos, rightEndPos, FColor::Blue, false, 0.5, 0, 2);
 		DrawDebugLine(GetWorld(), leftStartPos, leftEndPos, FColor::Green, false, 0.5, 0, 2);

@@ -9,6 +9,9 @@
 /**
  * 
  */
+UENUM()
+enum class EJumpDirection : uint8 { Left, Right };
+
 UCLASS()
 class WALLCLIMBJUMP_API UCharAnimInstance : public UAnimInstance
 {
@@ -21,5 +24,9 @@ public:
 	float Direction;
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsHolding;
+	UPROPERTY(BlueprintReadOnly)
+	EJumpDirection JumpDirection;
+	UPROPERTY(BlueprintReadOnly)
+	bool IsJumpingOff;
 	
 };

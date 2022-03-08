@@ -40,33 +40,36 @@ public:
 	// UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Animation)
 	// TSubclassOf<UAnimSequence> climbAnim;
 	
-	void ShowPrompt(class AClimbableWall* newWall);
+	void ShowPrompt(class AClimbableWall* NewWall);
 	void HidePrompt();
 	void Detach();
 
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category="Widgets")
-	UUIWidget* promptWidget;
+	UUIWidget* PromptWidget;
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
-	AClimbableWall* selectedWall;
+	AClimbableWall* SelectedWall;
+
+	UPROPERTY()
+	FHitResult WallTraceInfo;
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
-	class ALedge* selectedLedge;
+	class ALedge* SelectedLedge;
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
-	ALedge* currentLedge;
+	ALedge* CurrentLedge;
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
-	ALedge* rightLedge;
+	ALedge* RightLedge;
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
-	ALedge* leftLedge;
+	ALedge* LeftLedge;
 
 	bool bIsClimbing;
 	bool bIsHoldingLedge;
 	bool bIsRotating;
 	FRotator RotateTarget;
-	float moveDirection;
+	float MoveDirection;
 	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();

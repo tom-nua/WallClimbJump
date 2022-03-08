@@ -120,21 +120,21 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		// const float ForwardDotProduct = FVector::DotProduct(GetActorForwardVector(), SelectedLedge->GetActorRightVector());
 		// const float RightDotProduct = FVector::DotProduct(GetActorRightVector(), SelectedLedge->GetActorForwardVector());
 		// const float ForwardDotProduct = FVector::DotProduct(CurrentLedge->GetActorForwardVector(), GetActorForwardVector());
-		const float ForwardDotProduct = FVector::DotProduct(GetActorForwardVector(), WallTraceInfo.ImpactNormal);
+		const float ForwardDotProduct = FVector::DotProduct(WallTraceInfo.ImpactNormal, GetActorRightVector());
 		// const float RightDotProduct = FVector::DotProduct(CurrentLedge->GetActorRightVector(), GetActorRightVector());
 		UE_LOG(LogTemp, Warning, TEXT("Forward:%f"), ForwardDotProduct);
-		if(ForwardDotProduct < -1)
+		if(ForwardDotProduct < 0)
 		{
-			if(ForwardDotProduct > -2.000000)
+			if(ForwardDotProduct > -0.020000)
 			{
 				bIsRotating = false;
 				return;
 			}
 			FRotator CurrentRot = GetActorRotation();
 			SetActorRotation(CurrentRot.Add(0, 1, 0));
-		}else if(ForwardDotProduct > -1)
+		}else if(ForwardDotProduct > 0)
 		{
-			if(ForwardDotProduct < -2.000000)
+			if(ForwardDotProduct < 0.020000)
 			{
 				bIsRotating = false;
 				return;

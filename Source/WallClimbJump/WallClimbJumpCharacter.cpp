@@ -115,13 +115,9 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	{
 		SelectedLedge = nullptr;
 	}
-	if(CurrentLedge && bIsRotating && bIsHoldingLedge)
+	if(bIsRotating && (bIsHoldingLedge && CurrentLedge || bIsClimbing))
 	{
-		// const float ForwardDotProduct = FVector::DotProduct(GetActorForwardVector(), SelectedLedge->GetActorRightVector());
-		// const float RightDotProduct = FVector::DotProduct(GetActorRightVector(), SelectedLedge->GetActorForwardVector());
-		// const float ForwardDotProduct = FVector::DotProduct(CurrentLedge->GetActorForwardVector(), GetActorForwardVector());
 		const float ForwardDotProduct = FVector::DotProduct(WallTraceInfo.ImpactNormal, GetActorRightVector());
-		// const float RightDotProduct = FVector::DotProduct(CurrentLedge->GetActorRightVector(), GetActorRightVector());
 		UE_LOG(LogTemp, Warning, TEXT("Forward:%f"), ForwardDotProduct);
 		if(ForwardDotProduct < 0)
 		{
@@ -154,6 +150,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		}
 		if(HitWall)
 		{
+			WallTraceInfo = WallOutHit;
 			ShowPrompt(HitWall);
 			// UE_LOG(LogTemp, Warning, TEXT("Hit"))
 			return;
@@ -219,6 +216,7 @@ void AWallClimbJumpCharacter::WallAttach()
 			animController->bIsClimbing = true;
 		}
 		bIsClimbing = true;
+		bIsRotating = true;
 		GetCharacterMovement()->MaxFlySpeed = 100;
 		GetCharacterMovement()->BrakingDecelerationFlying = 80;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -235,6 +233,7 @@ void AWallClimbJumpCharacter::ShowPrompt(AClimbableWall* NewWall)
 	// UE_LOG(LogTemp, Warning, TEXT("Attempting to ShowPrompt"))
 	if(!PromptWidget || bIsClimbing)
 	{
+		bIsRotating = true;
 		return;
 	}
 	// UE_LOG(LogTemp, Warning, TEXT("Firing BP event"))

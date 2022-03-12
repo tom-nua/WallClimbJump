@@ -89,7 +89,6 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		// UE_LOG(LogTemp, Warning, TEXT("%s"), *v)
 	}
 	FHitResult LedgeOutHit;
-	FHitResult WallOutHit;
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
 	FVector ActorLoc = GetActorLocation();
@@ -140,6 +139,28 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		}
 		// FMath::RInterpTo(GetActorRotation(), RotateTarget, DeltaTime, 1);
 	}
+	if(bIsClimbing)
+	{
+		FHitResult LeftOutHit;
+		bool bLeftWallHit = GetWorld()->LineTraceSingleByChannel(LeftOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams);
+		if(bLeftWallHit && LeftOutHit.Actor != SelectedWall)
+		{
+			AClimbableWall* HitWall = Cast<AClimbableWall>(LeftOutHit.Actor);
+			if(!HitWall) return;
+			WallTraceInfo = LeftOutHit;
+			ShowPrompt(HitWall);
+		}
+		FHitResult RightOutHit;
+		bool bRightWallHit = GetWorld()->LineTraceSingleByChannel(RightOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams);
+		if(bRightWallHit && RightOutHit.Actor != SelectedWall)
+		{
+			AClimbableWall* HitWall = Cast<AClimbableWall>(RightOutHit.Actor);
+			if(!HitWall) return;
+			WallTraceInfo = RightOutHit;
+			ShowPrompt(HitWall);
+		}
+	}
+	FHitResult WallOutHit;
 	if(GetWorld()->LineTraceSingleByChannel(WallOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams))
 	{
 		AClimbableWall* HitWall = Cast<AClimbableWall>(WallOutHit.Actor);
@@ -328,10 +349,6 @@ void AWallClimbJumpCharacter::Jump()
 		bIsRotating = false;
 		CurrentLedge = nullptr;
 		GetCharacterMovement()->bOrientRotationToMovement = true;
-		if(animController)
-		{
-			animController->bIsHolding = false;
-		}
 		if(!RightLedge && MoveDirection > 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("right ledge"));
@@ -343,9 +360,9 @@ void AWallClimbJumpCharacter::Jump()
 			GetCharacterMovement()->AddImpulse(GetActorRightVector() * 970, true);
 			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 			// CurrentLedge = nullptr;
-			return;
+			// return;
 		}
-		if(!LeftLedge && MoveDirection < 0)
+		else if(!LeftLedge && MoveDirection < 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("left ledge"));
 			if(animController)
@@ -356,12 +373,18 @@ void AWallClimbJumpCharacter::Jump()
 			GetCharacterMovement()->AddImpulse(GetActorRightVector() * -970, true);
 			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 			// CurrentLedge = nullptr;
-			return;
+			// return;
 		}
-		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		return;
+		else
+		{
+			GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		}
+		if(animController)
+		{
+			animController->bIsHolding = false;
+		}
 	}
-	if(SelectedLedge)
+	else if(SelectedLedge)
 	{
 		FVector HangLocation = GetMesh()->GetSocketLocation("hand_Socket");
 		FHitResult FrontOutHit;
@@ -380,6 +403,7 @@ void AWallClimbJumpCharacter::Jump()
 		if(animController)
 		{
 			animController->bIsHolding = true;
+			if(GEngine) GEngine->AddOnScreenDebugMessage(-1, 5, FColor::White, FString("Set holding true"));
 		}
 		SetActorLocation(HangLocation);
 		GetCharacterMovement()->MaxFlySpeed = 50;
@@ -387,9 +411,8 @@ void AWallClimbJumpCharacter::Jump()
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		GetCharacterMovement()->StopMovementImmediately();
-		return;
 	}
-	if(!bIsClimbing)
+	else if(!bIsClimbing)
 	{
 		Super::Jump();
 	}

@@ -5,7 +5,7 @@
 #include "CharAnimInstance.h"
 #include "ClimbableWall.h"
 #include "DrawDebugHelpers.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
+// #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Ledge.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -85,8 +85,6 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		{
 			GetMesh()->GlobalAnimRateScale = 1.0f;
 		}
-		// FString v = GetVelocity().ToString();
-		// UE_LOG(LogTemp, Warning, TEXT("%s"), *v)
 	}
 	FHitResult LedgeOutHit;
 	FCollisionQueryParams CollisionParams;
@@ -96,24 +94,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	FVector StartPos = ActorLoc + GetActorForwardVector() * 40;
 	FVector EndPos = StartPos + GetActorUpVector() * 140;
 	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Red, false, 0.5, 0, 3);
-	// if(GetWorld()->LineTraceSingleByChannel(LedgeOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams))
-	// {
-	// 	
-	// }
-	if(GetWorld()->LineTraceSingleByChannel(LedgeOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams))
-	{
-		ALedge* HitLedge = Cast<ALedge>(LedgeOutHit.Actor);
-		if(HitLedge)
-		{
-			SelectedLedge = HitLedge;
-		}else
-		{
-			SelectedLedge = nullptr;
-		}
-	}else
-	{
-		SelectedLedge = nullptr;
-	}
+
 	if(bIsRotating && (bIsHoldingLedge && CurrentLedge || bIsClimbing))
 	{
 		const float ForwardDotProduct = FVector::DotProduct(WallTraceInfo.ImpactNormal, GetActorRightVector());
@@ -137,7 +118,26 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			FRotator currentRot = GetActorRotation();
 			SetActorRotation(currentRot.Add(0, -1, 0));
 		}
-		// FMath::RInterpTo(GetActorRotation(), RotateTarget, DeltaTime, 1);
+	}
+	if(!bIsHoldingLedge)
+	{
+		if(GetWorld()->LineTraceSingleByChannel(LedgeOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams))
+		{
+			ALedge* HitLedge = Cast<ALedge>(LedgeOutHit.Actor);
+			if(HitLedge)
+			{
+				SelectedLedge = HitLedge;
+				ShowPrompt("Space - Jump to Ledge");
+			}else
+			{
+				SelectedLedge = nullptr;
+				HidePrompt("Space - Jump to Ledge");
+			}
+		}else
+		{
+			SelectedLedge = nullptr;
+			HidePrompt("Space - Jump to Ledge");
+		}
 	}
 	if(bIsClimbing)
 	{
@@ -148,7 +148,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			AClimbableWall* HitWall = Cast<AClimbableWall>(LeftOutHit.Actor);
 			if(!HitWall) return;
 			WallTraceInfo = LeftOutHit;
-			ShowPrompt(HitWall);
+			WallDetected(HitWall);
 		}
 		FHitResult RightOutHit;
 		bool bRightWallHit = GetWorld()->LineTraceSingleByChannel(RightOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams);
@@ -157,7 +157,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			AClimbableWall* HitWall = Cast<AClimbableWall>(RightOutHit.Actor);
 			if(!HitWall) return;
 			WallTraceInfo = RightOutHit;
-			ShowPrompt(HitWall);
+			WallDetected(HitWall);
 		}
 	}
 	FHitResult WallOutHit;
@@ -172,12 +172,12 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		if(HitWall)
 		{
 			WallTraceInfo = WallOutHit;
-			ShowPrompt(HitWall);
+			WallDetected(HitWall);
 			// UE_LOG(LogTemp, Warning, TEXT("Hit"))
 			return;
 		}
 	}
-	HidePrompt();
+	WallUndetected();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -197,16 +197,16 @@ void AWallClimbJumpCharacter::SetupPlayerInputComponent(class UInputComponent* P
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &AWallClimbJumpCharacter::TurnAtRate);
+	// PlayerInputComponent->BindAxis("TurnRate", this, &AWallClimbJumpCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &AWallClimbJumpCharacter::LookUpAtRate);
+	// PlayerInputComponent->BindAxis("LookUpRate", this, &AWallClimbJumpCharacter::LookUpAtRate);
 
 	// handle touch devices
-	PlayerInputComponent->BindTouch(IE_Pressed, this, &AWallClimbJumpCharacter::TouchStarted);
-	PlayerInputComponent->BindTouch(IE_Released, this, &AWallClimbJumpCharacter::TouchStopped);
+	// PlayerInputComponent->BindTouch(IE_Pressed, this, &AWallClimbJumpCharacter::TouchStarted);
+	// PlayerInputComponent->BindTouch(IE_Released, this, &AWallClimbJumpCharacter::TouchStopped);
 
 	// VR headset functionality
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AWallClimbJumpCharacter::OnResetVR);
+	// PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AWallClimbJumpCharacter::OnResetVR);
 	
 	PlayerInputComponent->BindAction("Climb", IE_Pressed, this, &AWallClimbJumpCharacter::WallAttach);
 }
@@ -221,13 +221,14 @@ void AWallClimbJumpCharacter::Detach()
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	bIsClimbing = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+	HidePrompt("E - Stop Climbing");
 }
 
 void AWallClimbJumpCharacter::WallAttach()
 {
 	if(bIsClimbing)
 	{
-		PromptWidget->ShowPrompt(FText::FromString("E - Attach"));
+		ShowPrompt("E - Climb");
 		Detach();
 	}
 	else if(SelectedWall)
@@ -244,29 +245,25 @@ void AWallClimbJumpCharacter::WallAttach()
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		GetCharacterMovement()->StopMovementImmediately();
 		
-		PromptWidget->ShowPrompt(FText::FromString("E - Detach"));
+		ShowPrompt("E - Stop Climbing");
 	}
 }
 
-void AWallClimbJumpCharacter::ShowPrompt(AClimbableWall* NewWall)
+void AWallClimbJumpCharacter::WallDetected(AClimbableWall* NewWall)
 {
 	SelectedWall = NewWall;
-	// UE_LOG(LogTemp, Warning, TEXT("Attempting to ShowPrompt"))
-	if(!PromptWidget || bIsClimbing)
+	// UE_LOG(LogTemp, Warning, TEXT("Attempting to WallDetected"))
+	if(bIsClimbing)
 	{
 		bIsRotating = true;
 		return;
 	}
 	// UE_LOG(LogTemp, Warning, TEXT("Firing BP event"))
-	PromptWidget->ShowPrompt(FText::FromString("E - Climb"));
+	ShowPrompt("E - Climb");
 }
 
-void AWallClimbJumpCharacter::HidePrompt()
+void AWallClimbJumpCharacter::WallUndetected()
 {
-	// if (wall != SelectedWall)
-        	// {
-        	// 	return;
-        	// }
 	if(!SelectedWall)
 	{
 		return;
@@ -276,40 +273,54 @@ void AWallClimbJumpCharacter::HidePrompt()
 	{
 		Detach();
 	}
-	if(!PromptWidget)
+	else
 	{
-		return;
+		HidePrompt("E - Climb");
 	}
-	// UE_LOG(LogTemp, Warning, TEXT("Hiding ui"))
+}
+
+void AWallClimbJumpCharacter::ShowPrompt(FString NewText)
+{
+	if(!PromptWidget) return;
+	if(CurrentPrompt == NewText) return;
+	CurrentPrompt = NewText;
+	PromptWidget->ShowPrompt(FText::FromString(NewText));
+}
+
+void AWallClimbJumpCharacter::HidePrompt(FString NewText)
+{
+	if(!PromptWidget) return;
+	if(CurrentPrompt != NewText) return;
+	CurrentPrompt = nullptr;
 	PromptWidget->HidePrompt();
 }
 
-void AWallClimbJumpCharacter::OnResetVR()
-{
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
-}
+// void AWallClimbJumpCharacter::OnResetVR()
+// {
+// 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
+// }
+//
+// void AWallClimbJumpCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
+// {
+// 		Jump();
+// }
+//
+// void AWallClimbJumpCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
+// {
+// 		StopJumping();
+// }
 
-void AWallClimbJumpCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
-{
-		Jump();
-}
-
-void AWallClimbJumpCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
-{
-		StopJumping();
-}
-
-void AWallClimbJumpCharacter::TurnAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
-}
-
-void AWallClimbJumpCharacter::LookUpAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
-}
+// void AWallClimbJumpCharacter::TurnAtRate(float Rate)
+// {
+// 	// calculate delta for this frame from the rate information
+// 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+// }
+//
+// void AWallClimbJumpCharacter::LookUpAtRate(float Rate)
+// {
+// 	// calculate delta for this frame from the rate information
+// 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+// }
 
 void AWallClimbJumpCharacter::MoveForward(float Value)
 {
@@ -383,6 +394,7 @@ void AWallClimbJumpCharacter::Jump()
 		{
 			animController->bIsHolding = false;
 		}
+		HidePrompt("Space - Let Go");
 	}
 	else if(SelectedLedge)
 	{
@@ -411,6 +423,7 @@ void AWallClimbJumpCharacter::Jump()
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		GetCharacterMovement()->StopMovementImmediately();
+		ShowPrompt("Space - Let Go");
 	}
 	else if(!bIsClimbing)
 	{

@@ -1,12 +1,11 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "WallClimbJumpCharacter.h"
-
 #include "CharAnimInstance.h"
 #include "ClimbableWall.h"
 #include "DrawDebugHelpers.h"
-// #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Ledge.h"
+#include "UIWidget.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -75,6 +74,7 @@ void AWallClimbJumpCharacter::BeginPlay()
 void AWallClimbJumpCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	LocateTarget();
 	if(bIsClimbing)
 	{
 		if(GetVelocity().IsZero())
@@ -210,6 +210,33 @@ void AWallClimbJumpCharacter::SetupPlayerInputComponent(class UInputComponent* P
 	
 	PlayerInputComponent->BindAction("Climb", IE_Pressed, this, &AWallClimbJumpCharacter::WallAttach);
 }
+
+void AWallClimbJumpCharacter::LocateTarget()
+{
+	ALedge* ClosestLedge = nullptr;
+	float ClosestDistance = 0;
+	FVector SelectedPoint;
+	for (auto& Ledge : Ledges)
+	{
+		// if(GetDistanceTo(Ledge) > 500) continue;
+		if(!Ledge->WasRecentlyRendered(0.1)) continue;
+		FVector ClosestPoint;
+		const float Distance = Ledge->ActorGetDistanceToCollision(GetActorLocation(), ECollisionChannel::ECC_GameTraceChannel1, ClosestPoint);
+		if(Distance <= 0 || Distance < ClosestDistance) continue;
+		
+		ClosestDistance = Distance;
+		ClosestLedge = Ledge;
+		SelectedPoint = ClosestPoint;
+	}
+	if(!ClosestLedge) return;
+	if(GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::White, FString("Test"));
+	}
+	DrawDebugBox(GetWorld(), SelectedPoint, FVector(10,10,10), FColor::Red);
+	// bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
+}
+
 
 void AWallClimbJumpCharacter::Detach()
 {

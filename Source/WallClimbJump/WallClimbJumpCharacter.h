@@ -3,8 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-// #include "ClimbableWall.h"
-#include "UIWidget.h"
 #include "GameFramework/Character.h"
 #include "WallClimbJumpCharacter.generated.h"
 
@@ -35,16 +33,17 @@ public:
 	float BaseLookUpRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=UI)
-	TSubclassOf<UUIWidget> promptWidgetClass;
-
-	// UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Animation)
-	// TSubclassOf<UAnimSequence> climbAnim;
+	TSubclassOf<class UUIWidget> promptWidgetClass;
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category=Gameplay)
+	TArray<class ALedge*> Ledges;
 	
 	void WallDetected(class AClimbableWall* NewWall);
 	void WallUndetected();
 	void ShowPrompt(FString NewText);
 	void HidePrompt(FString NewText);
 	void Detach();
+	void LocateTarget();
 
 protected:
 

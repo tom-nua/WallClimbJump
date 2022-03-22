@@ -214,13 +214,13 @@ void AWallClimbJumpCharacter::SetupPlayerInputComponent(class UInputComponent* P
 	// PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AWallClimbJumpCharacter::OnResetVR);
 	
 	PlayerInputComponent->BindAction("Climb", IE_Pressed, this, &AWallClimbJumpCharacter::WallAttach);
+	PlayerInputComponent->BindAction("Grapple", IE_Pressed, this, &AWallClimbJumpCharacter::StartGrapple);
 }
 
 void AWallClimbJumpCharacter::LocateTarget()
 {
 	ALedge* ClosestLedge = nullptr;
 	// float ClosestDistance = 0;
-	FVector SelectedPoint;
 	for (auto& Ledge : Ledges)
 	{
 		// if(GetDistanceTo(Ledge) > 500) continue;
@@ -230,9 +230,9 @@ void AWallClimbJumpCharacter::LocateTarget()
 		if(!Ledge->IsOnScreen(ClosestPoint)) continue;
 		//if(Distance <= 0 || Distance < ClosestDistance) continue;
 		
-		if (UKismetMathLibrary::Vector_Distance(ClosestPoint, GetActorLocation()) <= UKismetMathLibrary::Vector_Distance(SelectedPoint, GetActorLocation()) || SelectedPoint == FVector::ZeroVector)
+		if (UKismetMathLibrary::Vector_Distance(ClosestPoint, GetActorLocation()) <= UKismetMathLibrary::Vector_Distance(GrapplePoint, GetActorLocation()) || GrapplePoint == FVector::ZeroVector)
 		{
-			SelectedPoint = ClosestPoint;
+			GrapplePoint = ClosestPoint;
 			// ClosestDistance = Distance;
 			ClosestLedge = Ledge;
 		}
@@ -244,9 +244,10 @@ void AWallClimbJumpCharacter::LocateTarget()
 	// }
 	if(targetActor)
 	{
-		targetActor->SetActorLocation(SelectedPoint);
+		targetActor->SetActorLocation(GrapplePoint + FollowCamera->GetForwardVector() * -55);
+		targetActor->SetActorRotation(FRotator(0, UKismetMathLibrary::FindLookAtRotation(GrapplePoint,FollowCamera->GetComponentLocation()).Yaw, 0));
 	}
-	DrawDebugBox(GetWorld(), SelectedPoint, FVector(10,10,10), FColor::Red);
+	// DrawDebugBox(GetWorld(), GrapplePoint, FVector(10,10,10), FColor::Red);
 	// bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
 }
 
@@ -262,6 +263,18 @@ void AWallClimbJumpCharacter::Detach()
 	bIsClimbing = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	HidePrompt("E - Stop Climbing");
+}
+
+void AWallClimbJumpCharacter::StartGrapple()
+{
+	if (bIsGrappling) return;
+	if (GrapplePoint == FVector::ZeroVector) return;
+	// GetWorld()->GetTimerManager().SetTimer(TimerHandle, %Grapple)
+}
+
+void AWallClimbJumpCharacter::Grapple()
+{
+	FTimerHandle TimerHandle;
 }
 
 void AWallClimbJumpCharacter::WallAttach()

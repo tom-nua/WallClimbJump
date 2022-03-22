@@ -50,6 +50,8 @@ public:
 	void ShowPrompt(FString NewText);
 	void HidePrompt(FString NewText);
 	void Detach();
+	void StartGrapple();
+	void Grapple();
 	void LocateTarget();
 
 protected:
@@ -76,7 +78,9 @@ protected:
 	bool bIsClimbing;
 	bool bIsHoldingLedge;
 	bool bIsRotating;
+	bool bIsGrappling;
 	FRotator RotateTarget;
+	FVector GrapplePoint;
 	float MoveDirection;
 	FString CurrentPrompt;
 	

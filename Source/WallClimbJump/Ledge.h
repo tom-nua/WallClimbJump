@@ -14,6 +14,8 @@ class WALLCLIMBJUMP_API ALedge : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ALedge();
+	UFUNCTION()
+	bool IsOnScreen(FVector PointLocation);
 
 protected:
 	// Called when the game starts or when spawned

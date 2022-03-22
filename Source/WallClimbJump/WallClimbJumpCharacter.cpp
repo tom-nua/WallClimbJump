@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AWallClimbJumpCharacter
@@ -68,6 +69,10 @@ void AWallClimbJumpCharacter::BeginPlay()
 	if(animInstance)
 	{
 		animController = Cast<UCharAnimInstance>(animInstance);
+	}
+	if(targetActorClass)
+	{
+		targetActor = GetWorld()->SpawnActor(targetActorClass);
 	}
 }
 
@@ -214,24 +219,32 @@ void AWallClimbJumpCharacter::SetupPlayerInputComponent(class UInputComponent* P
 void AWallClimbJumpCharacter::LocateTarget()
 {
 	ALedge* ClosestLedge = nullptr;
-	float ClosestDistance = 0;
+	// float ClosestDistance = 0;
 	FVector SelectedPoint;
 	for (auto& Ledge : Ledges)
 	{
 		// if(GetDistanceTo(Ledge) > 500) continue;
-		if(!Ledge->WasRecentlyRendered(0.1)) continue;
+		// if(!Ledge->WasRecentlyRendered(0.1)) continue;
 		FVector ClosestPoint;
-		const float Distance = Ledge->ActorGetDistanceToCollision(GetActorLocation(), ECollisionChannel::ECC_GameTraceChannel1, ClosestPoint);
-		if(Distance <= 0 || Distance < ClosestDistance) continue;
+		Ledge->ActorGetDistanceToCollision(GetActorLocation(), ECC_GameTraceChannel1, ClosestPoint);
+		if(!Ledge->IsOnScreen(ClosestPoint)) continue;
+		//if(Distance <= 0 || Distance < ClosestDistance) continue;
 		
-		ClosestDistance = Distance;
-		ClosestLedge = Ledge;
-		SelectedPoint = ClosestPoint;
+		if (UKismetMathLibrary::Vector_Distance(ClosestPoint, GetActorLocation()) <= UKismetMathLibrary::Vector_Distance(SelectedPoint, GetActorLocation()) || SelectedPoint == FVector::ZeroVector)
+		{
+			SelectedPoint = ClosestPoint;
+			// ClosestDistance = Distance;
+			ClosestLedge = Ledge;
+		}
 	}
 	if(!ClosestLedge) return;
-	if(GEngine)
+	// if(GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::White, FString("Test"));
+	// }
+	if(targetActor)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::White, FString("Test"));
+		targetActor->SetActorLocation(SelectedPoint);
 	}
 	DrawDebugBox(GetWorld(), SelectedPoint, FVector(10,10,10), FColor::Red);
 	// bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);

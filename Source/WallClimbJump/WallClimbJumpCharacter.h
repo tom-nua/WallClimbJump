@@ -21,6 +21,10 @@ class AWallClimbJumpCharacter : public ACharacter
 
 	UPROPERTY()
 	class UCharAnimInstance* animController;
+	
+	UPROPERTY()
+	AActor* targetActor;
+
 public:
 	AWallClimbJumpCharacter();
 
@@ -35,8 +39,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=UI)
 	TSubclassOf<class UUIWidget> promptWidgetClass;
 	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category=Gameplay)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Gameplay)
 	TArray<class ALedge*> Ledges;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=UI)
+	TSubclassOf<AActor> targetActorClass;
 	
 	void WallDetected(class AClimbableWall* NewWall);
 	void WallUndetected();

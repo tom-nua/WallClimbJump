@@ -52,6 +52,7 @@ public:
 	void Detach();
 	void StartGrapple();
 	void Grapple();
+	void GrappleTravel(float DeltaTime);
 	void LocateTarget();
 
 protected:
@@ -67,6 +68,8 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
 	class ALedge* SelectedLedge;
+	UPROPERTY(BlueprintReadOnly, Category="Movement")
+	ALedge* TargetLedge;
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
 	ALedge* CurrentLedge;
@@ -78,11 +81,13 @@ protected:
 	bool bIsClimbing;
 	bool bIsHoldingLedge;
 	bool bIsRotating;
+	bool bIsGrapplePreparing;
 	bool bIsGrappling;
 	FRotator RotateTarget;
 	FVector GrapplePoint;
 	float MoveDirection;
 	FString CurrentPrompt;
+	FTimerHandle GrappleTimerH;
 	
 	/** Resets HMD orientation in VR. */
 	// void OnResetVR();

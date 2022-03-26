@@ -79,7 +79,14 @@ void AWallClimbJumpCharacter::BeginPlay()
 void AWallClimbJumpCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	LocateTarget();
+	if (bIsGrappling)
+	{
+		GrappleTravel(DeltaTime);
+	}
+	else
+	{
+		LocateTarget();
+	}
 	if(bIsClimbing)
 	{
 		if(GetVelocity().IsZero())
@@ -219,7 +226,6 @@ void AWallClimbJumpCharacter::SetupPlayerInputComponent(class UInputComponent* P
 
 void AWallClimbJumpCharacter::LocateTarget()
 {
-	ALedge* ClosestLedge = nullptr;
 	// float ClosestDistance = 0;
 	for (auto& Ledge : Ledges)
 	{
@@ -234,10 +240,10 @@ void AWallClimbJumpCharacter::LocateTarget()
 		{
 			GrapplePoint = ClosestPoint;
 			// ClosestDistance = Distance;
-			ClosestLedge = Ledge;
+			TargetLedge = Ledge;
 		}
 	}
-	if(!ClosestLedge) return;
+	if(!TargetLedge) return;
 	// if(GEngine)
 	// {
 	// 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::White, FString("Test"));
@@ -247,7 +253,7 @@ void AWallClimbJumpCharacter::LocateTarget()
 		targetActor->SetActorLocation(GrapplePoint + FollowCamera->GetForwardVector() * -55);
 		targetActor->SetActorRotation(FRotator(0, UKismetMathLibrary::FindLookAtRotation(GrapplePoint,FollowCamera->GetComponentLocation()).Yaw, 0));
 	}
-	// DrawDebugBox(GetWorld(), GrapplePoint, FVector(10,10,10), FColor::Red);
+	DrawDebugBox(GetWorld(), GrapplePoint, FVector(10,10,10), FColor::Red);
 	// bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
 }
 
@@ -267,14 +273,37 @@ void AWallClimbJumpCharacter::Detach()
 
 void AWallClimbJumpCharacter::StartGrapple()
 {
-	if (bIsGrappling) return;
+	if (bIsGrapplePreparing || bIsGrappling) return;
 	if (GrapplePoint == FVector::ZeroVector) return;
-	// GetWorld()->GetTimerManager().SetTimer(TimerHandle, %Grapple)
+	bIsGrapplePreparing = true;
+	GetWorld()->GetTimerManager().SetTimer(GrappleTimerH, this, &AWallClimbJumpCharacter::Grapple, 3.0f);
 }
 
 void AWallClimbJumpCharacter::Grapple()
 {
-	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().ClearTimer(GrappleTimerH);
+	bIsGrappling = true;
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	GetCharacterMovement()->StopMovementImmediately();
+	// GrappleTravel();
+}
+
+void AWallClimbJumpCharacter::GrappleTravel(float DeltaTime)
+{
+	FVector CurrentLocation = GetActorLocation();
+	// FRotator TargetDirection = UKismetMathLibrary::FindLookAtRotation(CurrentLocation, GrapplePoint);
+	// SetActorLocation(CurrentLocation + (GrapplePoint - CurrentLocation) * 0.1);
+	if(UKismetMathLibrary::Vector_Distance(GrapplePoint, CurrentLocation) > 1)
+	{
+		SetActorLocation(UKismetMathLibrary::VInterpTo(GetActorLocation(), GrapplePoint, DeltaTime, 1));
+	}
+	else
+	{
+		CurrentLedge = TargetLedge;
+		bIsGrappling = false;
+		bIsHoldingLedge = true;
+		bIsGrapplePreparing = false;
+	}
 }
 
 void AWallClimbJumpCharacter::WallAttach()

@@ -107,7 +107,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	FVector EndPos = StartPos + GetActorUpVector() * 140;
 	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Red, false, 0.5, 0, 3);
 
-	if(bIsRotating && (bIsHoldingLedge && CurrentLedge || bIsClimbing))
+	if(bIsRotating && (bIsHoldingLedge && CurrentLedge || bIsClimbing || bIsGrapplePreparing))
 	{
 		const float ForwardDotProduct = FVector::DotProduct(WallTraceInfo.ImpactNormal, GetActorRightVector());
 		UE_LOG(LogTemp, Warning, TEXT("Forward:%f"), ForwardDotProduct);
@@ -227,23 +227,28 @@ void AWallClimbJumpCharacter::SetupPlayerInputComponent(class UInputComponent* P
 void AWallClimbJumpCharacter::LocateTarget()
 {
 	// float ClosestDistance = 0;
+	ALedge* ClosestLedge = nullptr;
+	// FVector ClosestLocation;
 	for (auto& Ledge : Ledges)
 	{
 		// if(GetDistanceTo(Ledge) > 500) continue;
 		// if(!Ledge->WasRecentlyRendered(0.1)) continue;
+		if(bIsHoldingLedge && TargetLedge == Ledge) continue;
 		FVector ClosestPoint;
-		Ledge->ActorGetDistanceToCollision(GetActorLocation(), ECC_GameTraceChannel1, ClosestPoint);
+		const float Distance = Ledge->ActorGetDistanceToCollision(GetActorLocation(), ECC_GameTraceChannel1, ClosestPoint);
+		if(Distance <= 0) continue;
 		if(!Ledge->IsOnScreen(ClosestPoint)) continue;
-		//if(Distance <= 0 || Distance < ClosestDistance) continue;
 		
 		if (UKismetMathLibrary::Vector_Distance(ClosestPoint, GetActorLocation()) <= UKismetMathLibrary::Vector_Distance(GrapplePoint, GetActorLocation()) || GrapplePoint == FVector::ZeroVector)
 		{
+			ClosestLedge = Ledge;
 			GrapplePoint = ClosestPoint;
-			// ClosestDistance = Distance;
-			TargetLedge = Ledge;
+			// ClosestLocation = ClosestPoint;
 		}
 	}
-	if(!TargetLedge) return;
+	if(!ClosestLedge) return;
+	TargetLedge = ClosestLedge;
+	// GrapplePoint = ClosestLocation;
 	// if(GEngine)
 	// {
 	// 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::White, FString("Test"));
@@ -251,7 +256,7 @@ void AWallClimbJumpCharacter::LocateTarget()
 	if(targetActor)
 	{
 		targetActor->SetActorLocation(GrapplePoint + FollowCamera->GetForwardVector() * -55);
-		targetActor->SetActorRotation(FRotator(0, UKismetMathLibrary::FindLookAtRotation(GrapplePoint,FollowCamera->GetComponentLocation()).Yaw, 0));
+		targetActor->SetActorRotation(FRotator(0, UKismetMathLibrary::FindLookAtRotation(GrapplePoint,FollowCamera->GetComponentLocation()).Yaw,0));
 	}
 	DrawDebugBox(GetWorld(), GrapplePoint, FVector(10,10,10), FColor::Red);
 	// bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
@@ -275,7 +280,23 @@ void AWallClimbJumpCharacter::StartGrapple()
 {
 	if (bIsGrapplePreparing || bIsGrappling) return;
 	if (GrapplePoint == FVector::ZeroVector) return;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+	FVector LedgeLocation = TargetLedge->GetActorLocation();
+	FHitResult FrontOutHit;
+	FVector StartPos = GetActorLocation();
+	StartPos.Z = LedgeLocation.Z;
+	FVector EndPos = LedgeLocation;
+	bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
+	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
+	if(!FrontHit || !Cast<ALedge>(FrontOutHit.Actor)) return;
+	if(GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White,FString("Hit ledge"));
+	}
 	bIsGrapplePreparing = true;
+	WallTraceInfo = FrontOutHit;
+	bIsRotating = true;
 	GetWorld()->GetTimerManager().SetTimer(GrappleTimerH, this, &AWallClimbJumpCharacter::Grapple, 3.0f);
 }
 
@@ -293,6 +314,12 @@ void AWallClimbJumpCharacter::GrappleTravel(float DeltaTime)
 	FVector CurrentLocation = GetActorLocation();
 	// FRotator TargetDirection = UKismetMathLibrary::FindLookAtRotation(CurrentLocation, GrapplePoint);
 	// SetActorLocation(CurrentLocation + (GrapplePoint - CurrentLocation) * 0.1);
+	float Distance = UKismetMathLibrary::Vector_Distance(GrapplePoint, CurrentLocation);
+	if(GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White,FString("Distance: ")+FString::SanitizeFloat(Distance));
+	}
+	
 	if(UKismetMathLibrary::Vector_Distance(GrapplePoint, CurrentLocation) > 1)
 	{
 		SetActorLocation(UKismetMathLibrary::VInterpTo(GetActorLocation(), GrapplePoint, DeltaTime, 1));

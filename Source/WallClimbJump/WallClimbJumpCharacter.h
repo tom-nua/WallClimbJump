@@ -83,7 +83,7 @@ protected:
 	bool bIsRotating;
 	bool bIsGrapplePreparing;
 	bool bIsGrappling;
-	FRotator RotateTarget;
+	// FRotator RotateTarget;
 	FVector GrapplePoint;
 	float MoveDirection;
 	FString CurrentPrompt;

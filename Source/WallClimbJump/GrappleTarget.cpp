@@ -30,6 +30,6 @@ void AGrappleTarget::Tick(float DeltaTime)
 void AGrappleTarget::ShowTarget(bool Show)
 {
 	if(!WidgetComponent) return;
-	WidgetComponent->SetVisibility(Show);
+	WidgetComponent->SetVisibleFlag(Show);
 }
 

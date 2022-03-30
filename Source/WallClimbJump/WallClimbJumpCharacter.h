@@ -20,10 +20,10 @@ class AWallClimbJumpCharacter : public ACharacter
 	class UCameraComponent* FollowCamera;
 
 	UPROPERTY()
-	class UCharAnimInstance* animController;
+	class UCharAnimInstance* AnimController;
 	
 	UPROPERTY()
-	AActor* targetActor;
+	class AGrappleTarget* TargetActor;
 
 public:
 	AWallClimbJumpCharacter();
@@ -37,13 +37,13 @@ public:
 	float BaseLookUpRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=UI)
-	TSubclassOf<class UUIWidget> promptWidgetClass;
+	TSubclassOf<class UUIWidget> PromptWidgetClass;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Gameplay)
 	TArray<class ALedge*> Ledges;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=UI)
-	TSubclassOf<AActor> targetActorClass;
+	TSubclassOf<AGrappleTarget> TargetActorClass;
 	
 	void WallDetected(class AClimbableWall* NewWall);
 	void WallUndetected();
@@ -130,9 +130,9 @@ protected:
 	// End of APawn interface
 
 public:
-	/** Returns CameraBoom subobject **/
+	/** Returns CameraBoom sub object **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
+	/** Returns FollowCamera sub object **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };
 

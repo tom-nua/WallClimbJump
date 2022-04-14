@@ -24,6 +24,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void ShowTarget(bool Show);
+	void ShowTarget(bool Show) const;
 
 };

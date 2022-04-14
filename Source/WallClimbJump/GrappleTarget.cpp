@@ -21,15 +21,15 @@ void AGrappleTarget::BeginPlay()
 }
 
 // Called every frame
-void AGrappleTarget::Tick(float DeltaTime)
+void AGrappleTarget::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-void AGrappleTarget::ShowTarget(bool Show)
+void AGrappleTarget::ShowTarget(const bool Show) const
 {
 	if(!WidgetComponent) return;
-	WidgetComponent->SetVisibleFlag(Show);
+	WidgetComponent->SetVisibility(Show);
 }
 

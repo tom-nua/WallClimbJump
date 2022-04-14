@@ -80,14 +80,7 @@ void AWallClimbJumpCharacter::BeginPlay()
 void AWallClimbJumpCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (bIsGrappling)
-	{
-		GrappleTravel(DeltaTime);
-	}
-	else
-	{
-		LocateTarget();
-	}
+	if(!TargetActor) return;
 	if(bIsClimbing)
 	{
 		if(GetVelocity().IsZero())
@@ -99,15 +92,10 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			GetMesh()->GlobalAnimRateScale = 1.0f;
 		}
 	}
-	if(!TargetActor) return;
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
 	CollisionParams.AddIgnoredActor(TargetActor);
 	FVector ActorLoc = GetActorLocation();
-	DrawDebugLine(GetWorld(), ActorLoc, ActorLoc + GetActorForwardVector() * 50, FColor::Green, false, 0.5, 0, 3);
-	FVector StartPos = ActorLoc + GetActorForwardVector() * 40;
-	FVector EndPos = StartPos + GetActorUpVector() * 140;
-	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Red, false, 0.5, 0, 3);
 
 	if(bIsRotating && (bIsHoldingLedge && CurrentLedge || bIsClimbing || bIsGrapplePreparing))
 	{
@@ -118,23 +106,42 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			if(ForwardDotProduct > -0.020000)
 			{
 				bIsRotating = false;
-				return;
 			}
-			FRotator CurrentRot = GetActorRotation();
-			SetActorRotation(CurrentRot.Add(0, 1, 0));
+			else
+			{
+				FRotator CurrentRot = GetActorRotation();
+				SetActorRotation(CurrentRot.Add(0, 1, 0));
+			}
 		}else if(ForwardDotProduct > 0)
 		{
 			if(ForwardDotProduct < 0.020000)
 			{
 				bIsRotating = false;
-				return;
 			}
-			FRotator currentRot = GetActorRotation();
-			SetActorRotation(currentRot.Add(0, -1, 0));
+			else
+			{
+				FRotator currentRot = GetActorRotation();
+				SetActorRotation(currentRot.Add(0, -1, 0));
+			}
 		}
 	}
+	if (bIsGrappling)
+	{
+		TargetActor->ShowTarget(false);
+		GrappleTravel(DeltaTime);
+		return;
+	}
+	if(bIsGrapplePreparing)
+	{
+		TargetActor->ShowTarget(false);
+		return;
+	}
+	LocateTarget();
 	if(!bIsHoldingLedge)
 	{
+		FVector StartPos = ActorLoc + GetActorForwardVector() * 40;
+		FVector EndPos = StartPos + GetActorUpVector() * 140;
+		DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Red, false, -1, 0, 3);
 		FHitResult LedgeOutHit;
 		if(GetWorld()->LineTraceSingleByChannel(LedgeOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams))
 		{
@@ -154,27 +161,28 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			HidePrompt("Space - Jump to Ledge");
 		}
 	}
-	if(bIsClimbing)
-	{
-		FHitResult LeftOutHit;
-		bool bLeftWallHit = GetWorld()->LineTraceSingleByChannel(LeftOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams);
-		if(bLeftWallHit && LeftOutHit.Actor != SelectedWall)
-		{
-			AClimbableWall* HitWall = Cast<AClimbableWall>(LeftOutHit.Actor);
-			if(!HitWall) return;
-			WallTraceInfo = LeftOutHit;
-			WallDetected(HitWall);
-		}
-		FHitResult RightOutHit;
-		bool bRightWallHit = GetWorld()->LineTraceSingleByChannel(RightOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams);
-		if(bRightWallHit && RightOutHit.Actor != SelectedWall)
-		{
-			AClimbableWall* HitWall = Cast<AClimbableWall>(RightOutHit.Actor);
-			if(!HitWall) return;
-			WallTraceInfo = RightOutHit;
-			WallDetected(HitWall);
-		}
-	}
+	DrawDebugLine(GetWorld(), ActorLoc, ActorLoc + GetActorForwardVector() * 50, FColor::Green, false, -1, 0, 3);
+	// if(bIsClimbing)
+	// {
+	// 	FHitResult LeftOutHit;
+	// 	bool bLeftWallHit = GetWorld()->LineTraceSingleByChannel(LeftOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams);
+	// 	if(bLeftWallHit && LeftOutHit.Actor != SelectedWall)
+	// 	{
+	// 		AClimbableWall* HitWall = Cast<AClimbableWall>(LeftOutHit.Actor);
+	// 		if(!HitWall) return;
+	// 		WallTraceInfo = LeftOutHit;
+	// 		WallDetected(HitWall);
+	// 	}
+	// 	FHitResult RightOutHit;
+	// 	bool bRightWallHit = GetWorld()->LineTraceSingleByChannel(RightOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams);
+	// 	if(bRightWallHit && RightOutHit.Actor != SelectedWall)
+	// 	{
+	// 		AClimbableWall* HitWall = Cast<AClimbableWall>(RightOutHit.Actor);
+	// 		if(!HitWall) return;
+	// 		WallTraceInfo = RightOutHit;
+	// 		WallDetected(HitWall);
+	// 	}
+	// }
 	FHitResult WallOutHit;
 	if(GetWorld()->LineTraceSingleByChannel(WallOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams))
 	{
@@ -232,11 +240,20 @@ void AWallClimbJumpCharacter::LocateTarget()
 	// float ClosestDistance = 0;
 	ALedge* ClosestLedge = nullptr;
 	// FVector ClosestLocation;
+	GrapplePoint = FVector::ZeroVector;
+	if(CurrentLedge)
+	{
+		DrawDebugSphere(GetWorld(), CurrentLedge->GetActorLocation(), 20, 12, FColor::Blue, false, -1);
+	}
 	for (const auto& Ledge : Ledges)
 	{
 		// if(GetDistanceTo(Ledge) > 500) continue;
 		// if(!Ledge->WasRecentlyRendered(0.1)) continue;
-		if(bIsHoldingLedge && TargetLedge == Ledge) continue;
+		if(bIsHoldingLedge && CurrentLedge == Ledge)
+		{
+			continue;
+		}
+		DrawDebugSphere(GetWorld(), GrapplePoint, 20, 12, FColor::Green, false, -1);
 		FVector ClosestPoint;
 		const float Distance = Ledge->ActorGetDistanceToCollision(GetActorLocation(), ECC_GameTraceChannel1, ClosestPoint);
 		if(Distance <= 0) continue;
@@ -248,14 +265,13 @@ void AWallClimbJumpCharacter::LocateTarget()
 			GrapplePoint = ClosestPoint;
 		}
 	}
-	if(!TargetActor) return;
 	if(ClosestLedge)
 	{
 		TargetLedge = ClosestLedge;
 		TargetActor->SetActorLocation(GrapplePoint + FollowCamera->GetForwardVector() * -55);
 		TargetActor->SetActorRotation(FRotator(0, UKismetMathLibrary::FindLookAtRotation(GrapplePoint,FollowCamera->GetComponentLocation()).Yaw,0));
 		TargetActor->ShowTarget(true);
-		// DrawDebugBox(GetWorld(), GrapplePoint, FVector(10,10,10), FColor::Red);
+		// DrawDebugBox(GetWorld(), GrapplePoint, FVector(10,10,10), FColor::Red, false, -1, 1);
 	}
 	else
 	{
@@ -311,7 +327,7 @@ void AWallClimbJumpCharacter::Grapple()
 	GrapplePoint.Z -= GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
 }
 
-void AWallClimbJumpCharacter::GrappleTravel(float DeltaTime)
+void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 {
 	const FVector CurrentLocation = GetActorLocation();
 	// FRotator TargetDirection = UKismetMathLibrary::FindLookAtRotation(CurrentLocation, GrapplePoint);
@@ -322,9 +338,9 @@ void AWallClimbJumpCharacter::GrappleTravel(float DeltaTime)
 		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White,FString("Distance: ")+FString::SanitizeFloat(Distance));
 	}
 	
-	if(UKismetMathLibrary::Vector_Distance(GrapplePoint, CurrentLocation) > 1)
+	if(UKismetMathLibrary::Vector_Distance(GrapplePoint, CurrentLocation) > 0.1)
 	{
-		SetActorLocation(UKismetMathLibrary::VInterpTo(GetActorLocation(), GrapplePoint, DeltaTime, 1));
+		SetActorLocation(UKismetMathLibrary::VInterpTo(GetActorLocation(), GrapplePoint, DeltaTime, 10));
 	}
 	else
 	{
@@ -437,7 +453,7 @@ void AWallClimbJumpCharacter::HidePrompt(FString NewText)
 // 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 // }
 
-void AWallClimbJumpCharacter::MoveForward(float Value)
+void AWallClimbJumpCharacter::MoveForward(const float Value)
 {
 	if (Controller && Value != 0.0f)
 	{
@@ -567,12 +583,13 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 		CollisionParams.AddIgnoredActor(this);
 		CollisionParams.AddIgnoredActor(TargetActor);
 		// CollisionParams.AddIgnoredActor(CurrentLedge);
-		FVector rightStartPos = GetActorLocation() + (GetActorRightVector() * 30) + (GetActorUpVector() * 120);
-		FVector rightEndPos = rightStartPos + GetActorForwardVector() * 40;
-		FVector leftStartPos = GetActorLocation() + (GetActorRightVector() * -30) + (GetActorUpVector() * 120);
-		FVector leftEndPos = leftStartPos + GetActorForwardVector() * 40;
-		DrawDebugLine(GetWorld(), rightStartPos, rightEndPos, FColor::Blue, false, 0.5, 0, 2);
-		DrawDebugLine(GetWorld(), leftStartPos, leftEndPos, FColor::Green, false, 0.5, 0, 2);
+		FVector RightStartPos;
+		RightStartPos = GetActorLocation() + (GetActorRightVector() * 30) + (GetActorUpVector() * 120);
+		FVector RightEndPos = RightStartPos + GetActorForwardVector() * 40;
+		FVector LeftStartPos = GetActorLocation() + (GetActorRightVector() * -30) + (GetActorUpVector() * 120);
+		FVector LeftEndPos = LeftStartPos + GetActorForwardVector() * 40;
+		DrawDebugLine(GetWorld(), RightStartPos, RightEndPos, FColor::Blue, false, 0.5, 0, 2);
+		DrawDebugLine(GetWorld(), LeftStartPos, LeftEndPos, FColor::Green, false, 0.5, 0, 2);
 		// if(Value == 0)
 		// {
 		// 	UE_LOG(LogTemp, Warning, TEXT("Moving Nowhere"))
@@ -585,12 +602,14 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 		// }
 		if(Value > 0)
 		{
-			FHitResult rightOutHit;
-			bool hitRight = GetWorld()->LineTraceSingleByChannel(rightOutHit, rightStartPos, rightEndPos, ECC_GameTraceChannel1, CollisionParams);
-			if (hitRight)
+			FHitResult RightOutHit;
+			bool bHitRight;
+			bHitRight = GetWorld()->LineTraceSingleByChannel(RightOutHit, RightStartPos, RightEndPos, ECC_GameTraceChannel1,
+			                                                 CollisionParams);
+			if (bHitRight)
 			{
 				// UE_LOG(LogTemp, Warning, TEXT("Moving Right"))
-				ALedge* HitLedge = Cast<ALedge>(rightOutHit.Actor);
+				ALedge* HitLedge = Cast<ALedge>(RightOutHit.Actor);
 				if(HitLedge)
 				{
 					RightLedge = HitLedge;
@@ -620,12 +639,14 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 		}
 		else if(Value < 0)
 		{
-			FHitResult leftOutHit;
-			bool hitLeft = GetWorld()->LineTraceSingleByChannel(leftOutHit, leftStartPos, leftEndPos, ECC_GameTraceChannel1, CollisionParams);
-			if (hitLeft)
+			FHitResult LeftOutHit;
+			bool bHitLeft;
+			bHitLeft = GetWorld()->LineTraceSingleByChannel(LeftOutHit, LeftStartPos, LeftEndPos, ECC_GameTraceChannel1,
+			                                                CollisionParams);
+			if (bHitLeft)
 			{
 				// UE_LOG(LogTemp, Warning, TEXT("Moving Right"))
-				ALedge* HitLedge = Cast<ALedge>(leftOutHit.Actor);
+				ALedge* HitLedge = Cast<ALedge>(LeftOutHit.Actor);
 				if(HitLedge)
 				{
 					LeftLedge = HitLedge;

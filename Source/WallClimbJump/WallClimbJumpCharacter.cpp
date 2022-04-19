@@ -62,14 +62,14 @@ void AWallClimbJumpCharacter::BeginPlay()
 	if(PromptWidgetClass)
 	{
 		UUserWidget* userWidget = CreateWidget(GetWorld()->GetFirstPlayerController(), PromptWidgetClass);
-		if(!userWidget){return;}
+		if(!userWidget) return;
 		userWidget->AddToViewport(0);
 		PromptWidget = Cast<UUIWidget>(userWidget);		
 	}
-	UAnimInstance* animInstance = GetMesh()->GetAnimInstance();
-	if(animInstance)
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance)
 	{
-		AnimController = Cast<UCharAnimInstance>(animInstance);
+		AnimController = Cast<UCharAnimInstance>(AnimInstance);
 	}
 	if(TargetActorClass)
 	{
@@ -300,11 +300,11 @@ void AWallClimbJumpCharacter::StartGrapple()
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
 	CollisionParams.AddIgnoredActor(TargetActor);
-	FVector LedgeLocation = TargetLedge->GetActorLocation();
+	// FVector LedgeLocation = TargetLedge->GetActorLocation();
 	FHitResult FrontOutHit;
 	FVector StartPos = GetActorLocation();
-	StartPos.Z = LedgeLocation.Z;
-	FVector EndPos = LedgeLocation;
+	StartPos.Z = GrapplePoint.Z;
+	FVector EndPos = GrapplePoint;
 	bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
 	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
 	if(!FrontHit || !Cast<ALedge>(FrontOutHit.Actor)) return;

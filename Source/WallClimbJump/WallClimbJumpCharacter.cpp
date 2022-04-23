@@ -304,7 +304,7 @@ void AWallClimbJumpCharacter::StartGrapple()
 	FHitResult FrontOutHit;
 	FVector StartPos = GetActorLocation();
 	StartPos.Z = GrapplePoint.Z;
-	FVector EndPos = GrapplePoint;
+	FVector EndPos = GrapplePoint + UKismetMathLibrary::GetDirectionUnitVector(StartPos, GrapplePoint) * 1;
 	bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
 	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
 	if(!FrontHit || !Cast<ALedge>(FrontOutHit.Actor)) return;

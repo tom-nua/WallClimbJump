@@ -85,6 +85,7 @@ protected:
 	bool bIsGrappling;
 	// FRotator RotateTarget;
 	FVector GrapplePoint;
+	FVector HoldOffset;
 	float MoveDirection;
 	FString CurrentPrompt;
 	FTimerHandle GrappleTimerH;

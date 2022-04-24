@@ -54,10 +54,25 @@ AWallClimbJumpCharacter::AWallClimbJumpCharacter()
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 
+	// HoldOffset = UKismetMathLibrary::Vector_Distance(GetActorLocation(), GetMesh()->GetSocketLocation("hand_Socket"));
+	// if(GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, GetActorLocation().ToString());
+	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, GetMesh()->GetSocketLocation("hand_Socket").ToString());
+	// }
+		//UKismetMathLibrary::MakeRelativeTransform(GetActorTransform(), GetMesh()->GetSocketTransform("hand_Socket")).GetLocation();
+
 }
 
 void AWallClimbJumpCharacter::BeginPlay()
 {
+	// HoldOffset = UKismetMathLibrary::Vector_Distance(GetActorLocation(), GetMesh()->GetSocketLocation("hand_Socket"));
+	// if(GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, GetActorLocation().ToString());
+	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, GetMesh()->GetSocketLocation("hand_Socket").ToString());
+	// }
+	HoldOffset = UKismetMathLibrary::MakeRelativeTransform(GetActorTransform(), GetMesh()->GetSocketTransform("hand_Socket")).GetLocation();
 	Super::BeginPlay();
 	if(PromptWidgetClass)
 	{
@@ -310,7 +325,7 @@ void AWallClimbJumpCharacter::StartGrapple()
 	if(!FrontHit || !Cast<ALedge>(FrontOutHit.Actor)) return;
 	if(GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White,FString("Hit ledge"));
+		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, FString("Hit ledge"));
 	}
 	bIsGrapplePreparing = true;
 	WallTraceInfo = FrontOutHit;
@@ -324,26 +339,29 @@ void AWallClimbJumpCharacter::Grapple()
 	bIsGrappling = true;
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->StopMovementImmediately();
-	GrapplePoint.Z -= GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
+	GrapplePoint += HoldOffset;
+	// GrapplePoint.Z -= HoldOffset;
 }
 
 void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 {
-	const FVector CurrentLocation = GetActorLocation();
 	// FRotator TargetDirection = UKismetMathLibrary::FindLookAtRotation(CurrentLocation, GrapplePoint);
 	// SetActorLocation(CurrentLocation + (GrapplePoint - CurrentLocation) * 0.1);
-	const float Distance = UKismetMathLibrary::Vector_Distance(GrapplePoint, CurrentLocation);
-	if(GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White,FString("Distance: ")+FString::SanitizeFloat(Distance));
-	}
+	const FVector NewLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), GrapplePoint, DeltaTime, 10);
+	// const float Distance = UKismetMathLibrary::Vector_Distance(GrapplePoint, CurrentLocation);
+	// if(GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, FString("Distance: ")+FString::SanitizeFloat(Distance));
+	// }
 	
-	if(UKismetMathLibrary::Vector_Distance(GrapplePoint, CurrentLocation) > 0.1)
+	// if(UKismetMathLibrary::Vector_Distance(GrapplePoint, CurrentLocation) > 0.1)
+	if(NewLocation != GrapplePoint)
 	{
-		SetActorLocation(UKismetMathLibrary::VInterpTo(GetActorLocation(), GrapplePoint, DeltaTime, 10));
+		SetActorLocation(NewLocation);
 	}
 	else
 	{
+		SetActorLocation(NewLocation);
 		if(AnimController)
 		{
 			AnimController->bIsHolding = true;

@@ -53,6 +53,7 @@ public:
 	void StartGrapple();
 	void Grapple();
 	void GrappleTravel(float DeltaTime);
+	void GrabLedge(const FVector HangLocation);
 	void LocateTarget();
 
 protected:

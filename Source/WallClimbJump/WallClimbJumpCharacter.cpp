@@ -361,7 +361,6 @@ void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 	}
 	else
 	{
-		SetActorLocation(NewLocation);
 		if(AnimController)
 		{
 			AnimController->bIsHolding = true;
@@ -370,7 +369,25 @@ void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 		bIsGrappling = false;
 		bIsHoldingLedge = true;
 		bIsGrapplePreparing = false;
+		GrabLedge(NewLocation);
 	}
+}
+
+void AWallClimbJumpCharacter::GrabLedge(const FVector HangLocation)
+{
+	bIsHoldingLedge = true;
+	if(AnimController)
+	{
+		AnimController->bIsHolding = true;
+		if(GEngine) GEngine->AddOnScreenDebugMessage(-1, 5, FColor::White, FString("Set holding true"));
+	}
+	SetActorLocation(HangLocation);
+	GetCharacterMovement()->MaxFlySpeed = 50;
+	GetCharacterMovement()->BrakingDecelerationFlying = 110;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	GetCharacterMovement()->StopMovementImmediately();
+	ShowPrompt("Space - Let Go");
 }
 
 void AWallClimbJumpCharacter::WallAttach()
@@ -560,21 +577,9 @@ void AWallClimbJumpCharacter::Jump()
 		if(!FrontHit || !Cast<ALedge>(FrontOutHit.Actor)) return;
 		WallTraceInfo = FrontOutHit;
 		HangLocation.Z -= GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
-		bIsHoldingLedge = true;
 		bIsRotating = true;
 		CurrentLedge = SelectedLedge;
-		if(AnimController)
-		{
-			AnimController->bIsHolding = true;
-			if(GEngine) GEngine->AddOnScreenDebugMessage(-1, 5, FColor::White, FString("Set holding true"));
-		}
-		SetActorLocation(HangLocation);
-		GetCharacterMovement()->MaxFlySpeed = 50;
-		GetCharacterMovement()->BrakingDecelerationFlying = 110;
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-		GetCharacterMovement()->StopMovementImmediately();
-		ShowPrompt("Space - Let Go");
+		GrabLedge(HangLocation);
 	}
 	else if(!bIsClimbing)
 	{

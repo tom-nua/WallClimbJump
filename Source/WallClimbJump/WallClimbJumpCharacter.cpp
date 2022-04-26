@@ -493,6 +493,7 @@ void AWallClimbJumpCharacter::MoveForward(const float Value)
 {
 	if (Controller && Value != 0.0f)
 	{
+		if(bIsHoldingLedge || bIsGrapplePreparing || bIsGrappling) return;
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -504,10 +505,6 @@ void AWallClimbJumpCharacter::MoveForward(const float Value)
 			// WallTraceInfo.GetReversedHit(reverse);
 			// SetActorRotation(WallTraceInfo.Normal.Rotation(), ETeleportType::None);
 			AddMovementInput(GetActorUpVector(), Value, false);
-		}
-		else if(bIsHoldingLedge)
-		{
-			
 		}
 		else
 		{
@@ -582,7 +579,7 @@ void AWallClimbJumpCharacter::Jump()
 		CurrentLedge = SelectedLedge;
 		GrabLedge(HangLocation);
 	}
-	else if(!bIsClimbing)
+	else if(!bIsClimbing && !bIsGrappling && !bIsGrapplePreparing)
 	{
 		Super::Jump();
 	}
@@ -713,6 +710,7 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 	{
 		return;
 	}
+	if(bIsGrappling || bIsGrapplePreparing) return;
 	if(bIsClimbing)
 	{
 		// SetActorRotation(SelectedWall->GetActorRotation(), ETeleportType::None);

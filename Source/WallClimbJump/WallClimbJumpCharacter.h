@@ -90,6 +90,7 @@ protected:
 	float MoveDirection;
 	FString CurrentPrompt;
 	FTimerHandle GrappleTimerH;
+	FCollisionShape CapsuleCollisionShape = FCollisionShape::MakeCapsule(6, 70);
 	
 	/** Resets HMD orientation in VR. */
 	// void OnResetVR();

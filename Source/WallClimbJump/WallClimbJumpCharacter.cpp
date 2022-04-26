@@ -158,7 +158,8 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		FVector EndPos = StartPos + GetActorUpVector() * 140;
 		DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Red, false, -1, 0, 3);
 		FHitResult LedgeOutHit;
-		if(GetWorld()->LineTraceSingleByChannel(LedgeOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams))
+		if(GetWorld()->SweepSingleByChannel(LedgeOutHit, StartPos, EndPos, FQuat(), ECC_GameTraceChannel1, CapsuleCollisionShape, CollisionParams))
+		// if(GetWorld()->LineTraceSingleByChannel(LedgeOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams))
 		{
 			ALedge* HitLedge = Cast<ALedge>(LedgeOutHit.Actor);
 			if(HitLedge)
@@ -339,8 +340,8 @@ void AWallClimbJumpCharacter::Grapple()
 	bIsGrappling = true;
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->StopMovementImmediately();
-	GrapplePoint += HoldOffset;
-	// GrapplePoint.Z -= HoldOffset;
+	GrapplePoint.Z += HoldOffset.Z;
+	// GrapplePoint += HoldOffset;
 }
 
 void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
@@ -571,7 +572,7 @@ void AWallClimbJumpCharacter::Jump()
 		CollisionParams.AddIgnoredActor(this);
 		CollisionParams.AddIgnoredActor(TargetActor);
 		FVector StartPos = GetActorLocation() + GetActorUpVector() * 140;
-		FVector EndPos = StartPos + GetActorForwardVector() * 40;
+		FVector EndPos = StartPos + GetActorForwardVector() * 60;
 		bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
 		DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
 		if(!FrontHit || !Cast<ALedge>(FrontOutHit.Actor)) return;

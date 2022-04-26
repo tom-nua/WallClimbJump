@@ -169,27 +169,34 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		}
 		DrawDebugCapsule(GetWorld(), StartPos + GetActorUpVector() * 70, 70, 14, GetActorRotation().Quaternion(), FColor::Green, false, -1, 0, 3);
 	}
-	// if(bIsClimbing)
-	// {
-	// 	FHitResult LeftOutHit;
-	// 	bool bLeftWallHit = GetWorld()->LineTraceSingleByChannel(LeftOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams);
-	// 	if(bLeftWallHit && LeftOutHit.Actor != SelectedWall)
-	// 	{
-	// 		AClimbableWall* HitWall = Cast<AClimbableWall>(LeftOutHit.Actor);
-	// 		if(!HitWall) return;
-	// 		WallTraceInfo = LeftOutHit;
-	// 		WallDetected(HitWall);
-	// 	}
-	// 	FHitResult RightOutHit;
-	// 	bool bRightWallHit = GetWorld()->LineTraceSingleByChannel(RightOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams);
-	// 	if(bRightWallHit && RightOutHit.Actor != SelectedWall)
-	// 	{
-	// 		AClimbableWall* HitWall = Cast<AClimbableWall>(RightOutHit.Actor);
-	// 		if(!HitWall) return;
-	// 		WallTraceInfo = RightOutHit;
-	// 		WallDetected(HitWall);
-	// 	}
-	// }
+	if(bIsClimbing)
+	{
+		FHitResult LeftOutHit;
+		FVector RayEnd = ActorLoc + GetActorForwardVector() * 50;
+		DrawDebugLine(GetWorld(), RayEnd + GetActorRightVector() * -40, RayEnd, FColor::Red, false, -1, 0, 3);
+		DrawDebugLine(GetWorld(), RayEnd + GetActorRightVector() * 40, RayEnd, FColor::Red, false, -1, 0, 3);
+		bool bLeftWallHit = GetWorld()->LineTraceSingleByChannel(LeftOutHit, RayEnd + GetActorRightVector() * -40, RayEnd, ECC_WorldStatic, CollisionParams);
+		if(bLeftWallHit && LeftOutHit.Normal != LeftWallNormal)
+		{
+			AClimbableWall* HitWall = Cast<AClimbableWall>(LeftOutHit.Actor);
+			if(HitWall)
+			{
+				WallTraceInfo = LeftOutHit;
+				bIsRotating = true;
+			}
+		}
+		FHitResult RightOutHit;
+		bool bRightWallHit = GetWorld()->LineTraceSingleByChannel(RightOutHit, RayEnd + GetActorRightVector() * 40, RayEnd, ECC_WorldStatic, CollisionParams);
+		if(bRightWallHit && RightOutHit.Normal != RightWallNormal)
+		{
+			AClimbableWall* HitWall = Cast<AClimbableWall>(RightOutHit.Actor);
+			if(HitWall)
+			{
+				WallTraceInfo = RightOutHit;
+				bIsRotating = true;
+			}
+		}
+	}
 	DrawDebugLine(GetWorld(), ActorLoc, ActorLoc + GetActorForwardVector() * 50, FColor::Green, false, -1, 0, 3);
 	FHitResult WallOutHit;
 	if(GetWorld()->LineTraceSingleByChannel(WallOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams))

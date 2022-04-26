@@ -67,6 +67,12 @@ protected:
 	UPROPERTY()
 	FHitResult WallTraceInfo;
 
+	UPROPERTY()
+	FVector LeftWallNormal;
+
+	UPROPERTY()
+	FVector RightWallNormal;
+
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
 	class ALedge* SelectedLedge;
 	UPROPERTY(BlueprintReadOnly, Category="Movement")

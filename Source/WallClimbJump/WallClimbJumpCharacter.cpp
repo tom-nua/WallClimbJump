@@ -156,10 +156,9 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	{
 		FVector StartPos = ActorLoc + GetActorForwardVector() * 40;
 		FVector EndPos = StartPos + GetActorUpVector() * 140;
-		DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Red, false, -1, 0, 3);
+		// DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Red, false, -1, 0, 3);
 		FHitResult LedgeOutHit;
-		if(GetWorld()->SweepSingleByChannel(LedgeOutHit, StartPos, EndPos, FQuat(), ECC_GameTraceChannel1, CapsuleCollisionShape, CollisionParams))
-		// if(GetWorld()->LineTraceSingleByChannel(LedgeOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams))
+		if(GetWorld()->SweepSingleByChannel(LedgeOutHit, StartPos, EndPos, GetActorRotation().Quaternion(), ECC_GameTraceChannel1, CapsuleCollisionShape, CollisionParams))
 		{
 			ALedge* HitLedge = Cast<ALedge>(LedgeOutHit.Actor);
 			if(HitLedge)
@@ -176,8 +175,8 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			SelectedLedge = nullptr;
 			HidePrompt("Space - Jump to Ledge");
 		}
+		DrawDebugCapsule(GetWorld(), StartPos + GetActorUpVector() * 70, 70, 14, GetActorRotation().Quaternion(), FColor::Green, false, -1, 0, 3);
 	}
-	DrawDebugLine(GetWorld(), ActorLoc, ActorLoc + GetActorForwardVector() * 50, FColor::Green, false, -1, 0, 3);
 	// if(bIsClimbing)
 	// {
 	// 	FHitResult LeftOutHit;
@@ -199,6 +198,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	// 		WallDetected(HitWall);
 	// 	}
 	// }
+	DrawDebugLine(GetWorld(), ActorLoc, ActorLoc + GetActorForwardVector() * 50, FColor::Green, false, -1, 0, 3);
 	FHitResult WallOutHit;
 	if(GetWorld()->LineTraceSingleByChannel(WallOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams))
 	{

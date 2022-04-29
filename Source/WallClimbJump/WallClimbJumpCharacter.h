@@ -64,17 +64,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
 	AClimbableWall* SelectedWall;
 
-	UPROPERTY()
-	FHitResult WallTraceInfo;
-
-	UPROPERTY()
-	FVector LeftWallNormal;
-
-	UPROPERTY()
-	FVector RightWallNormal;
-
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
-	class ALedge* SelectedLedge;
+	ALedge* SelectedLedge;
 	UPROPERTY(BlueprintReadOnly, Category="Movement")
 	ALedge* TargetLedge;
 
@@ -90,9 +81,12 @@ protected:
 	bool bIsRotating;
 	bool bIsGrapplePreparing;
 	bool bIsGrappling;
-	// FRotator RotateTarget;
 	FVector GrapplePoint;
+	FVector GrappleNormal;
 	FVector HoldOffset;
+	FVector RotateNormal;
+	FVector LeftWallNormal;
+	FVector RightWallNormal;
 	float MoveDirection;
 	FString CurrentPrompt;
 	FTimerHandle GrappleTimerH;

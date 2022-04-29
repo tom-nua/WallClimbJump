@@ -27,6 +27,8 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	EJumpDirection JumpDirection = EJumpDirection::Left;
 	UPROPERTY(BlueprintReadOnly)
-	bool IsJumpingOff;
+	bool bIsJumpingOff;
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsGrappling;
 	
 };

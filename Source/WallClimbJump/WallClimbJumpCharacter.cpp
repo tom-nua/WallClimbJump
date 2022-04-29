@@ -106,8 +106,8 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 
 	if(bIsRotating && (bIsHoldingLedge && CurrentLedge || bIsClimbing || bIsGrapplePreparing))
 	{
-		const float ForwardDotProduct = FVector::DotProduct(WallTraceInfo.ImpactNormal, GetActorRightVector());
-		UE_LOG(LogTemp, Warning, TEXT("Forward:%f"), ForwardDotProduct);
+		const float ForwardDotProduct = FVector::DotProduct(RotateNormal, GetActorRightVector());
+		// UE_LOG(LogTemp, Warning, TEXT("Forward:%f"), ForwardDotProduct);
 		if(ForwardDotProduct < 0)
 		{
 			if(ForwardDotProduct > -0.020000)
@@ -181,7 +181,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			AClimbableWall* HitWall = Cast<AClimbableWall>(LeftOutHit.Actor);
 			if(HitWall)
 			{
-				WallTraceInfo = LeftOutHit;
+				RotateNormal = LeftOutHit.ImpactNormal;
 				bIsRotating = true;
 			}
 		}
@@ -192,7 +192,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			AClimbableWall* HitWall = Cast<AClimbableWall>(RightOutHit.Actor);
 			if(HitWall)
 			{
-				WallTraceInfo = RightOutHit;
+				RotateNormal = RightOutHit.ImpactNormal;
 				bIsRotating = true;
 			}
 		}
@@ -209,7 +209,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		}
 		if(HitWall)
 		{
-			WallTraceInfo = WallOutHit;
+			RotateNormal = WallOutHit.ImpactNormal;
 			WallDetected(HitWall);
 			// UE_LOG(LogTemp, Warning, TEXT("Hit"))
 			return;
@@ -322,8 +322,18 @@ void AWallClimbJumpCharacter::StartGrapple()
 		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, FString("Hit ledge"));
 	}
 	bIsGrapplePreparing = true;
-	WallTraceInfo = FrontOutHit;
+	GrappleNormal = FrontOutHit.ImpactNormal;
+	RotateNormal = GrappleNormal;
+	// RotateNormal.X += 90;
+	if(GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
+	}
 	bIsRotating = true;
+	if(AnimController)
+	{
+		AnimController->bIsGrappling = true;
+	}
 	GetWorld()->GetTimerManager().SetTimer(GrappleTimerH, this, &AWallClimbJumpCharacter::Grapple, 3.0f);
 }
 
@@ -334,13 +344,16 @@ void AWallClimbJumpCharacter::Grapple()
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->StopMovementImmediately();
 	GrapplePoint.Z += HoldOffset.Z;
-	// GrapplePoint += HoldOffset;
 }
 
 void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 {
-	// FRotator TargetDirection = UKismetMathLibrary::FindLookAtRotation(CurrentLocation, GrapplePoint);
-	// SetActorLocation(CurrentLocation + (GrapplePoint - CurrentLocation) * 0.1);
+	RotateNormal = GrappleNormal;
+	if(GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
+	}
+	bIsRotating = true;
 	const FVector NewLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), GrapplePoint, DeltaTime, 10);
 	if(NewLocation != GrapplePoint)
 	{
@@ -350,6 +363,7 @@ void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 	{
 		if(AnimController)
 		{
+			AnimController->bIsGrappling = false;
 			AnimController->bIsHolding = true;
 		}
 		CurrentLedge = TargetLedge;
@@ -511,7 +525,7 @@ void AWallClimbJumpCharacter::Jump()
 			if(AnimController)
 			{
 				AnimController->JumpDirection = EJumpDirection::Right;
-				AnimController->IsJumpingOff = true;
+				AnimController->bIsJumpingOff = true;
 			}
 			GetCharacterMovement()->AddImpulse(GetActorRightVector() * 970, true);
 			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
@@ -522,7 +536,7 @@ void AWallClimbJumpCharacter::Jump()
 			if(AnimController)
 			{
 				AnimController->JumpDirection = EJumpDirection::Left;
-				AnimController->IsJumpingOff = true;
+				AnimController->bIsJumpingOff = true;
 			}
 			GetCharacterMovement()->AddImpulse(GetActorRightVector() * -970, true);
 			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
@@ -550,7 +564,7 @@ void AWallClimbJumpCharacter::Jump()
 		bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
 		DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
 		if(!FrontHit || !Cast<ALedge>(FrontOutHit.Actor)) return;
-		WallTraceInfo = FrontOutHit;
+		RotateNormal = FrontOutHit.ImpactNormal;
 		HangLocation.Z -= GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
 		bIsRotating = true;
 		CurrentLedge = SelectedLedge;

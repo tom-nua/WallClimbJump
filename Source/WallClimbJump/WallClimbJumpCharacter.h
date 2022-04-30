@@ -24,7 +24,7 @@ class AWallClimbJumpCharacter : public ACharacter
 	
 	UPROPERTY()
 	class AGrappleTarget* TargetActor;
-
+	
 public:
 	AWallClimbJumpCharacter();
 
@@ -39,11 +39,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=UI)
 	TSubclassOf<class UUIWidget> PromptWidgetClass;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Gameplay)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Gameplay)
 	TArray<class ALedge*> Ledges;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=UI)
 	TSubclassOf<AGrappleTarget> TargetActorClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Gameplay)
+	class UCableComponent* CableComponent;
 	
 	void WallDetected(class AClimbableWall* NewWall);
 	void WallUndetected();

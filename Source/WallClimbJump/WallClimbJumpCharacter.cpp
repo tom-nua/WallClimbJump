@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "WallClimbJumpCharacter.h"
+
+#include "CableComponent.h"
 #include "CharAnimInstance.h"
 #include "ClimbableWall.h"
 #include "DrawDebugHelpers.h"
@@ -54,19 +56,22 @@ AWallClimbJumpCharacter::AWallClimbJumpCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+	CableComponent = CreateDefaultSubobject<UCableComponent>("Cable");
+	// CableComponent->SetupAttachment(GetMesh(), "grapple_Socket");
 
 }
 
 void AWallClimbJumpCharacter::BeginPlay()
 {
-	HoldOffset = UKismetMathLibrary::MakeRelativeTransform(GetActorTransform(), GetMesh()->GetSocketTransform("hand_Socket")).GetLocation();
+	CableComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "grapple_Socket");
+	HoldOffset = UKismetMathLibrary::MakeRelativeTransform(GetActorTransform(), GetMesh()->GetSocketTransform("hang_Socket")).GetLocation();
 	Super::BeginPlay();
 	if(PromptWidgetClass)
 	{
-		UUserWidget* userWidget = CreateWidget(GetWorld()->GetFirstPlayerController(), PromptWidgetClass);
-		if(!userWidget) return;
-		userWidget->AddToViewport(0);
-		PromptWidget = Cast<UUIWidget>(userWidget);		
+		UUserWidget* UserWidget = CreateWidget(GetWorld()->GetFirstPlayerController(), PromptWidgetClass);
+		if(!UserWidget) return;
+		UserWidget->AddToViewport(0);
+		PromptWidget = Cast<UUIWidget>(UserWidget);		
 	}
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if(AnimInstance)
@@ -344,6 +349,8 @@ void AWallClimbJumpCharacter::Grapple()
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->StopMovementImmediately();
 	GrapplePoint.Z += HoldOffset.Z;
+	CableComponent->EndLocation = GrapplePoint;
+	CableComponent->SetVisibility(true);
 }
 
 void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
@@ -361,6 +368,7 @@ void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 	}
 	else
 	{
+		CableComponent->SetVisibility(false);
 		if(AnimController)
 		{
 			AnimController->bIsGrappling = false;
@@ -554,7 +562,7 @@ void AWallClimbJumpCharacter::Jump()
 	else if(SelectedLedge)
 	{
 		if(!TargetActor) return;
-		FVector HangLocation = GetMesh()->GetSocketLocation("hand_Socket");
+		FVector HangLocation = GetMesh()->GetSocketLocation("hang_Socket");
 		FHitResult FrontOutHit;
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(this);

@@ -335,13 +335,13 @@ void AWallClimbJumpCharacter::StartGrapple()
 	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, FString("Hit ledge"));
 	// }
 	GrappleNormal = GrappleOutHit.ImpactNormal;
-	// RotateNormal = GrappleNormal;
-	// RotateNormal.X += 90;
+	RotateNormal = GrappleNormal;
+	RotateNormal.X += 90;
 	// if(GEngine)
 	// {
 	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
 	// }
-	RotateNormal = GrappleNormal;
+	// RotateNormal = GrappleNormal;
 	bIsRotating = true;
 	if(AnimController)
 	{
@@ -370,12 +370,12 @@ void AWallClimbJumpCharacter::Grapple()
 
 void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 {
-	// RotateNormal = GrappleNormal;
+	RotateNormal = GrappleNormal;
 	// if(GEngine)
 	// {
 	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
 	// }
-	// bIsRotating = true;
+	bIsRotating = true;
 	const FVector NewLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), GrapplePoint, DeltaTime, 10);
 	if(NewLocation != GrapplePoint)
 	{

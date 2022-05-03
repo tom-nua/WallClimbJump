@@ -132,8 +132,8 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			}
 			else
 			{
-				FRotator currentRot = GetActorRotation();
-				SetActorRotation(currentRot.Add(0, -1, 0));
+				FRotator CurrentRot = GetActorRotation();
+				SetActorRotation(CurrentRot.Add(0, -1, 0));
 			}
 		}
 	}
@@ -321,19 +321,19 @@ void AWallClimbJumpCharacter::StartGrapple()
 	FVector EndPos = GrapplePoint + UKismetMathLibrary::GetDirectionUnitVector(StartPos, GrapplePoint) * 1;
 	bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
 	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
-	if(!FrontHit || !Cast<ALedge>(FrontOutHit.Actor)) return;
-	if(GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, FString("Hit ledge"));
-	}
+	if(!FrontHit || FrontOutHit.Actor != TargetLedge) return;
+	// if(GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, FString("Hit ledge"));
+	// }
 	bIsGrapplePreparing = true;
 	GrappleNormal = FrontOutHit.ImpactNormal;
 	RotateNormal = GrappleNormal;
 	// RotateNormal.X += 90;
-	if(GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
-	}
+	// if(GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
+	// }
 	bIsRotating = true;
 	if(AnimController)
 	{
@@ -348,18 +348,23 @@ void AWallClimbJumpCharacter::Grapple()
 	bIsGrappling = true;
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->StopMovementImmediately();
+	CableComponent->EndLocation = UKismetMathLibrary::InverseTransformLocation(CableComponent->GetComponentTransform(), GrapplePoint);
+	if(GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, CableComponent->EndLocation.ToString());
+	}
 	GrapplePoint.Z += HoldOffset.Z;
-	CableComponent->EndLocation = GrapplePoint;
+
 	CableComponent->SetVisibility(true);
 }
 
 void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 {
 	RotateNormal = GrappleNormal;
-	if(GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
-	}
+	// if(GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
+	// }
 	bIsRotating = true;
 	const FVector NewLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), GrapplePoint, DeltaTime, 10);
 	if(NewLocation != GrapplePoint)
@@ -388,7 +393,7 @@ void AWallClimbJumpCharacter::GrabLedge(const FVector HangLocation)
 	if(AnimController)
 	{
 		AnimController->bIsHolding = true;
-		if(GEngine) GEngine->AddOnScreenDebugMessage(-1, 5, FColor::White, FString("Set holding true"));
+		// if(GEngine) GEngine->AddOnScreenDebugMessage(-1, 5, FColor::White, FString("Set holding true"));
 	}
 	SetActorLocation(HangLocation);
 	GetCharacterMovement()->MaxFlySpeed = 50;

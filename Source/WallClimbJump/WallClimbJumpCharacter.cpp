@@ -57,6 +57,9 @@ AWallClimbJumpCharacter::AWallClimbJumpCharacter()
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 	CableComponent = CreateDefaultSubobject<UCableComponent>("Cable");
+	CableComponent->NumSegments = 1;
+	CableComponent->CableLength = 20;
+	CableComponent->CableWidth = 5;
 	// CableComponent->SetupAttachment(GetMesh(), "grapple_Socket");
 
 }
@@ -112,10 +115,10 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	if(bIsRotating && (bIsHoldingLedge && CurrentLedge || bIsClimbing || bIsGrapplePreparing))
 	{
 		const float ForwardDotProduct = FVector::DotProduct(RotateNormal, GetActorRightVector());
-		// UE_LOG(LogTemp, Warning, TEXT("Forward:%f"), ForwardDotProduct);
+		UE_LOG(LogTemp, Warning, TEXT("Forward:%f"), ForwardDotProduct);
 		if(ForwardDotProduct < 0)
 		{
-			if(ForwardDotProduct > -0.020000)
+			if(ForwardDotProduct > -0.010000)
 			{
 				bIsRotating = false;
 			}
@@ -126,7 +129,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			}
 		}else if(ForwardDotProduct > 0)
 		{
-			if(ForwardDotProduct < 0.020000)
+			if(ForwardDotProduct < 0.010000)
 			{
 				bIsRotating = false;
 			}
@@ -135,6 +138,9 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 				FRotator CurrentRot = GetActorRotation();
 				SetActorRotation(CurrentRot.Add(0, -1, 0));
 			}
+		}else
+		{
+			bIsRotating = false;
 		}
 	}
 	if (bIsGrappling)
@@ -174,34 +180,34 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 		}
 		DrawDebugCapsule(GetWorld(), StartPos + GetActorUpVector() * 70, 70, 14, GetActorRotation().Quaternion(), FColor::Green, false, -1, 0, 3);
 	}
-	if(bIsClimbing)
-	{
-		FHitResult LeftOutHit;
-		FVector RayEnd = ActorLoc + GetActorForwardVector() * 50;
-		DrawDebugLine(GetWorld(), RayEnd + GetActorRightVector() * -40, RayEnd, FColor::Red, false, -1, 0, 3);
-		DrawDebugLine(GetWorld(), RayEnd + GetActorRightVector() * 40, RayEnd, FColor::Red, false, -1, 0, 3);
-		bool bLeftWallHit = GetWorld()->LineTraceSingleByChannel(LeftOutHit, RayEnd + GetActorRightVector() * -40, RayEnd, ECC_WorldStatic, CollisionParams);
-		if(bLeftWallHit && LeftOutHit.Normal != LeftWallNormal)
-		{
-			AClimbableWall* HitWall = Cast<AClimbableWall>(LeftOutHit.Actor);
-			if(HitWall)
-			{
-				RotateNormal = LeftOutHit.ImpactNormal;
-				bIsRotating = true;
-			}
-		}
-		FHitResult RightOutHit;
-		bool bRightWallHit = GetWorld()->LineTraceSingleByChannel(RightOutHit, RayEnd + GetActorRightVector() * 40, RayEnd, ECC_WorldStatic, CollisionParams);
-		if(bRightWallHit && RightOutHit.Normal != RightWallNormal)
-		{
-			AClimbableWall* HitWall = Cast<AClimbableWall>(RightOutHit.Actor);
-			if(HitWall)
-			{
-				RotateNormal = RightOutHit.ImpactNormal;
-				bIsRotating = true;
-			}
-		}
-	}
+	// if(bIsClimbing)
+	// {
+	// 	FHitResult LeftOutHit;
+	// 	FVector RayEnd = ActorLoc + GetActorForwardVector() * 50;
+	// 	DrawDebugLine(GetWorld(), RayEnd + GetActorRightVector() * -40, RayEnd, FColor::Red, false, -1, 0, 3);
+	// 	DrawDebugLine(GetWorld(), RayEnd + GetActorRightVector() * 40, RayEnd, FColor::Red, false, -1, 0, 3);
+	// 	bool bLeftWallHit = GetWorld()->LineTraceSingleByChannel(LeftOutHit, RayEnd + GetActorRightVector() * -40, RayEnd, ECC_WorldStatic, CollisionParams);
+	// 	if(bLeftWallHit && LeftOutHit.Normal != LeftWallNormal)
+	// 	{
+	// 		AClimbableWall* HitWall = Cast<AClimbableWall>(LeftOutHit.Actor);
+	// 		if(HitWall)
+	// 		{
+	// 			RotateNormal = LeftOutHit.ImpactNormal;
+	// 			bIsRotating = true;
+	// 		}
+	// 	}
+	// 	FHitResult RightOutHit;
+	// 	bool bRightWallHit = GetWorld()->LineTraceSingleByChannel(RightOutHit, RayEnd + GetActorRightVector() * 40, RayEnd, ECC_WorldStatic, CollisionParams);
+	// 	if(bRightWallHit && RightOutHit.Normal != RightWallNormal)
+	// 	{
+	// 		AClimbableWall* HitWall = Cast<AClimbableWall>(RightOutHit.Actor);
+	// 		if(HitWall)
+	// 		{
+	// 			RotateNormal = RightOutHit.ImpactNormal;
+	// 			bIsRotating = true;
+	// 		}
+	// 	}
+	// }
 	DrawDebugLine(GetWorld(), ActorLoc, ActorLoc + GetActorForwardVector() * 50, FColor::Green, false, -1, 0, 3);
 	FHitResult WallOutHit;
 	if(GetWorld()->LineTraceSingleByChannel(WallOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams))
@@ -312,28 +318,30 @@ void AWallClimbJumpCharacter::StartGrapple()
 	if(!TargetActor) return;
 	if (bIsGrapplePreparing || bIsGrappling) return;
 	if (GrapplePoint == FVector::ZeroVector) return;
+	bIsGrapplePreparing = true;
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
 	CollisionParams.AddIgnoredActor(TargetActor);
-	FHitResult FrontOutHit;
+	FHitResult GrappleOutHit;
 	FVector StartPos = GetActorLocation();
+	GrapplePoint.Z = TargetLedge->GetActorLocation().Z;
 	StartPos.Z = GrapplePoint.Z;
 	FVector EndPos = GrapplePoint + UKismetMathLibrary::GetDirectionUnitVector(StartPos, GrapplePoint) * 1;
-	bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
+	bool FrontHit = GetWorld()->LineTraceSingleByChannel(GrappleOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
 	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
-	if(!FrontHit || FrontOutHit.Actor != TargetLedge) return;
+	if(!FrontHit || GrappleOutHit.Actor != TargetLedge) {bIsGrapplePreparing = false; return;}
 	// if(GEngine)
 	// {
 	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, FString("Hit ledge"));
 	// }
-	bIsGrapplePreparing = true;
-	GrappleNormal = FrontOutHit.ImpactNormal;
-	RotateNormal = GrappleNormal;
+	GrappleNormal = GrappleOutHit.ImpactNormal;
+	// RotateNormal = GrappleNormal;
 	// RotateNormal.X += 90;
 	// if(GEngine)
 	// {
 	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
 	// }
+	RotateNormal = GrappleNormal;
 	bIsRotating = true;
 	if(AnimController)
 	{
@@ -348,28 +356,31 @@ void AWallClimbJumpCharacter::Grapple()
 	bIsGrappling = true;
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->StopMovementImmediately();
-	CableComponent->EndLocation = UKismetMathLibrary::InverseTransformLocation(CableComponent->GetComponentTransform(), GrapplePoint);
 	if(GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, CableComponent->EndLocation.ToString());
 	}
+	CableLocalPosition = GrapplePoint;
 	GrapplePoint.Z += HoldOffset.Z;
-
+	CableComponent->AttachEndTo.OtherActor = this;
+	CableComponent->AttachEndTo.ComponentProperty = "CableComponent";
+	CableComponent->EndLocation = UKismetMathLibrary::InverseTransformLocation(CableComponent->GetComponentTransform(), CableLocalPosition);
 	CableComponent->SetVisibility(true);
 }
 
 void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 {
-	RotateNormal = GrappleNormal;
+	// RotateNormal = GrappleNormal;
 	// if(GEngine)
 	// {
 	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
 	// }
-	bIsRotating = true;
+	// bIsRotating = true;
 	const FVector NewLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), GrapplePoint, DeltaTime, 10);
 	if(NewLocation != GrapplePoint)
 	{
 		SetActorLocation(NewLocation);
+		CableComponent->EndLocation = UKismetMathLibrary::InverseTransformLocation(CableComponent->GetComponentTransform(), CableLocalPosition);
 	}
 	else
 	{

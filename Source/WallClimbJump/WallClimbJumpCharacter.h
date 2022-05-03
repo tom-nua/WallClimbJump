@@ -89,6 +89,7 @@ protected:
 	FVector RotateNormal;
 	FVector LeftWallNormal;
 	FVector RightWallNormal;
+	FVector CableLocalPosition;
 	float MoveDirection;
 	FString CurrentPrompt;
 	FTimerHandle GrappleTimerH;

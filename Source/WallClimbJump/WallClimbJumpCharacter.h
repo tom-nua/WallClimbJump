@@ -52,6 +52,7 @@ public:
 	void ShowPrompt(FString NewText);
 	void HidePrompt(FString NewText);
 	void Detach();
+	void FireCable();
 	void StartGrapple();
 	void Grapple();
 	void GrappleTravel(float DeltaTime);
@@ -92,7 +93,8 @@ protected:
 	FVector CableLocalPosition;
 	float MoveDirection;
 	FString CurrentPrompt;
-	FTimerHandle GrappleTimerH;
+	FTimerHandle GrappleLaunchH;
+	FTimerHandle GrappleRopeH;
 	FCollisionShape CapsuleCollisionShape = FCollisionShape::MakeCapsule(14, 70);
 	
 	/** Resets HMD orientation in VR. */

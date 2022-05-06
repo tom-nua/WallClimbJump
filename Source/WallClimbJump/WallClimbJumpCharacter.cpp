@@ -143,15 +143,10 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			bIsRotating = false;
 		}
 	}
-	if (bIsGrappling)
+	if (bIsGrappling || bIsGrapplePreparing)
 	{
 		TargetActor->ShowTarget(false);
 		GrappleTravel(DeltaTime);
-		return;
-	}
-	if(bIsGrapplePreparing)
-	{
-		TargetActor->ShowTarget(false);
 		return;
 	}
 	LocateTarget();
@@ -313,6 +308,16 @@ void AWallClimbJumpCharacter::Detach()
 	HidePrompt("E - Stop Climbing");
 }
 
+void AWallClimbJumpCharacter::FireCable()
+{
+	GetWorld()->GetTimerManager().ClearTimer(GrappleRopeH);
+	CableLocalPosition = GrapplePoint;
+	CableComponent->AttachEndTo.OtherActor = this;
+	CableComponent->AttachEndTo.ComponentProperty = "CableComponent";
+	CableComponent->EndLocation = UKismetMathLibrary::InverseTransformLocation(CableComponent->GetComponentTransform(), CableLocalPosition);
+	CableComponent->SetVisibility(true);
+}
+
 void AWallClimbJumpCharacter::StartGrapple()
 {
 	if(!TargetActor) return;
@@ -347,12 +352,13 @@ void AWallClimbJumpCharacter::StartGrapple()
 	{
 		AnimController->bIsGrappling = true;
 	}
-	GetWorld()->GetTimerManager().SetTimer(GrappleTimerH, this, &AWallClimbJumpCharacter::Grapple, 3.0f);
+	GetWorld()->GetTimerManager().SetTimer(GrappleRopeH, this, &AWallClimbJumpCharacter::FireCable, 1.0f);
+	GetWorld()->GetTimerManager().SetTimer(GrappleLaunchH, this, &AWallClimbJumpCharacter::Grapple, 3.0f);
 }
 
 void AWallClimbJumpCharacter::Grapple()
 {
-	GetWorld()->GetTimerManager().ClearTimer(GrappleTimerH);
+	GetWorld()->GetTimerManager().ClearTimer(GrappleLaunchH);
 	bIsGrappling = true;
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->StopMovementImmediately();
@@ -360,16 +366,13 @@ void AWallClimbJumpCharacter::Grapple()
 	{
 		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, CableComponent->EndLocation.ToString());
 	}
-	CableLocalPosition = GrapplePoint;
 	GrapplePoint.Z += HoldOffset.Z;
-	CableComponent->AttachEndTo.OtherActor = this;
-	CableComponent->AttachEndTo.ComponentProperty = "CableComponent";
-	CableComponent->EndLocation = UKismetMathLibrary::InverseTransformLocation(CableComponent->GetComponentTransform(), CableLocalPosition);
-	CableComponent->SetVisibility(true);
 }
 
 void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 {
+	CableComponent->EndLocation = UKismetMathLibrary::InverseTransformLocation(CableComponent->GetComponentTransform(), CableLocalPosition);
+	if(!bIsGrappling) return;
 	RotateNormal = GrappleNormal;
 	// if(GEngine)
 	// {
@@ -380,7 +383,6 @@ void AWallClimbJumpCharacter::GrappleTravel(const float DeltaTime)
 	if(NewLocation != GrapplePoint)
 	{
 		SetActorLocation(NewLocation);
-		CableComponent->EndLocation = UKismetMathLibrary::InverseTransformLocation(CableComponent->GetComponentTransform(), CableLocalPosition);
 	}
 	else
 	{

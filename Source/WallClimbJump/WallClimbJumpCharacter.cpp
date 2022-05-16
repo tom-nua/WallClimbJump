@@ -5,7 +5,7 @@
 #include "CableComponent.h"
 #include "CharAnimInstance.h"
 #include "ClimbableWall.h"
-#include "DrawDebugHelpers.h"
+// #include "DrawDebugHelpers.h"
 #include "EngineUtils.h"
 #include "GrappleTarget.h"
 #include "Ledge.h"
@@ -60,7 +60,6 @@ AWallClimbJumpCharacter::AWallClimbJumpCharacter()
 	CableComponent->NumSegments = 1;
 	CableComponent->CableLength = 20;
 	CableComponent->CableWidth = 5;
-	// CableComponent->SetupAttachment(GetMesh(), "grapple_Socket");
 
 }
 
@@ -173,7 +172,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 			SelectedLedge = nullptr;
 			HidePrompt("Space - Jump to Ledge");
 		}
-		DrawDebugCapsule(GetWorld(), StartPos + GetActorUpVector() * 70, 70, 14, GetActorRotation().Quaternion(), FColor::Green, false, -1, 0, 3);
+		// DrawDebugCapsule(GetWorld(), StartPos + GetActorUpVector() * 70, 70, 14, GetActorRotation().Quaternion(), FColor::Green, false, -1, 0, 3);
 	}
 	// if(bIsClimbing)
 	// {
@@ -203,7 +202,7 @@ void AWallClimbJumpCharacter::Tick(float DeltaTime)
 	// 		}
 	// 	}
 	// }
-	DrawDebugLine(GetWorld(), ActorLoc, ActorLoc + GetActorForwardVector() * 50, FColor::Green, false, -1, 0, 3);
+	// DrawDebugLine(GetWorld(), ActorLoc, ActorLoc + GetActorForwardVector() * 50, FColor::Green, false, -1, 0, 3);
 	FHitResult WallOutHit;
 	if(GetWorld()->LineTraceSingleByChannel(WallOutHit, ActorLoc, ActorLoc + GetActorForwardVector() * 50, ECC_WorldStatic, CollisionParams))
 	{
@@ -260,17 +259,17 @@ void AWallClimbJumpCharacter::LocateTarget()
 {
 	ALedge* ClosestLedge = nullptr;
 	GrapplePoint = FVector::ZeroVector;
-	if(CurrentLedge)
-	{
-		DrawDebugSphere(GetWorld(), CurrentLedge->GetActorLocation(), 20, 12, FColor::Blue, false, -1);
-	}
+	// if(CurrentLedge)
+	// {
+	// 	DrawDebugSphere(GetWorld(), CurrentLedge->GetActorLocation(), 20, 12, FColor::Blue, false, -1);
+	// }
 	for (const auto& Ledge : Ledges)
 	{
 		if(bIsHoldingLedge && CurrentLedge == Ledge)
 		{
 			continue;
 		}
-		DrawDebugSphere(GetWorld(), GrapplePoint, 20, 12, FColor::Green, false, -1);
+		// DrawDebugSphere(GetWorld(), GrapplePoint, 20, 12, FColor::Green, false, -1);
 		FVector ClosestPoint;
 		const float Distance = Ledge->ActorGetDistanceToCollision(GetActorLocation(), ECC_GameTraceChannel1, ClosestPoint);
 		if(Distance <= 0) continue;
@@ -333,7 +332,7 @@ void AWallClimbJumpCharacter::StartGrapple()
 	StartPos.Z = GrapplePoint.Z;
 	FVector EndPos = GrapplePoint + UKismetMathLibrary::GetDirectionUnitVector(StartPos, GrapplePoint) * 1;
 	bool FrontHit = GetWorld()->LineTraceSingleByChannel(GrappleOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
-	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
+	// DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
 	if(!FrontHit || GrappleOutHit.Actor != TargetLedge) {bIsGrapplePreparing = false; return;}
 	// if(GEngine)
 	// {
@@ -346,7 +345,6 @@ void AWallClimbJumpCharacter::StartGrapple()
 	// {
 	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, RotateNormal.ToCompactString());
 	// }
-	// RotateNormal = GrappleNormal;
 	bIsRotating = true;
 	if(AnimController)
 	{
@@ -362,10 +360,10 @@ void AWallClimbJumpCharacter::Grapple()
 	bIsGrappling = true;
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->StopMovementImmediately();
-	if(GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, CableComponent->EndLocation.ToString());
-	}
+	// if(GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::White, CableComponent->EndLocation.ToString());
+	// }
 	GrapplePoint.Z += HoldOffset.Z;
 }
 
@@ -540,14 +538,14 @@ void AWallClimbJumpCharacter::Jump()
 {
 	if(CurrentLedge)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("current ledge"));
+		// UE_LOG(LogTemp, Warning, TEXT("current ledge"));
 		bIsHoldingLedge = false;
 		bIsRotating = false;
 		CurrentLedge = nullptr;
 		GetCharacterMovement()->bOrientRotationToMovement = true;
 		if(!RightLedge && MoveDirection > 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("right ledge"));
+			// UE_LOG(LogTemp, Warning, TEXT("right ledge"));
 			if(AnimController)
 			{
 				AnimController->JumpDirection = EJumpDirection::Right;
@@ -558,7 +556,7 @@ void AWallClimbJumpCharacter::Jump()
 		}
 		else if(!LeftLedge && MoveDirection < 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("left ledge"));
+			// UE_LOG(LogTemp, Warning, TEXT("left ledge"));
 			if(AnimController)
 			{
 				AnimController->JumpDirection = EJumpDirection::Left;
@@ -588,7 +586,7 @@ void AWallClimbJumpCharacter::Jump()
 		FVector StartPos = GetActorLocation() + GetActorUpVector() * 140;
 		FVector EndPos = StartPos + GetActorForwardVector() * 60;
 		bool FrontHit = GetWorld()->LineTraceSingleByChannel(FrontOutHit, StartPos, EndPos, ECC_GameTraceChannel1, CollisionParams);
-		DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
+		// DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, 10, 0, 2);
 		if(!FrontHit || !Cast<ALedge>(FrontOutHit.Actor)) return;
 		RotateNormal = FrontOutHit.ImpactNormal;
 		HangLocation.Z -= GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
@@ -625,8 +623,8 @@ void AWallClimbJumpCharacter::MoveRight(float Value)
 		FVector RightEndPos = RightStartPos + GetActorForwardVector() * 40;
 		FVector LeftStartPos = GetActorLocation() + (GetActorRightVector() * -30) + (GetActorUpVector() * 120);
 		FVector LeftEndPos = LeftStartPos + GetActorForwardVector() * 40;
-		DrawDebugLine(GetWorld(), RightStartPos, RightEndPos, FColor::Blue, false, 0.5, 0, 2);
-		DrawDebugLine(GetWorld(), LeftStartPos, LeftEndPos, FColor::Green, false, 0.5, 0, 2);
+		// DrawDebugLine(GetWorld(), RightStartPos, RightEndPos, FColor::Blue, false, 0.5, 0, 2);
+		// DrawDebugLine(GetWorld(), LeftStartPos, LeftEndPos, FColor::Green, false, 0.5, 0, 2);
 		if(Value > 0)
 		{
 			FHitResult RightOutHit;
